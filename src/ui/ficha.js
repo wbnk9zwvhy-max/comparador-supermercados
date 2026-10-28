@@ -121,7 +121,7 @@ function Detalle({ C, p, cerrar, poner, cantidadDe, abrir }) {
         ${otras.length > 0 && html`<section style=${{ display: "grid", gap: 10 }}><h3 class="h3">Alternativas en otros súper</h3>
           <p class="peq">Lo ${AJ.saludable ? "más natural y barato" : "más barato"} del mismo tipo, para la misma cantidad. Si una tienda no lo tiene, lo más parecido que vende.</p>
           <ul class="filas tarjeta">${otras.map(e => html`<${FilaProducto} key=${e.p.k} C=${C} p=${e.p} n=${cantidadDe(e.p.k)} poner=${poner} abrir=${abrir} aj=${AJ}
-            extra=${html`<span class="peq">${e.n > 1 ? `${e.n} × para la misma cantidad · ` : ""}${fmt(e.coste)}${e.menosNatural ? " · menos natural" : ""}${e.como === "parecido" ? " · parecido" : e.como === "equivalente" ? " · lo mismo con otro nombre" : e.como === "sustituto" ? " · sustituto: no hay uno igual" : ""}</span>`} />`)}</ul></section>`}
+            extra=${html`<span class="peq">${e.n > 1 ? `${e.n} × para la misma cantidad · ` : ""}${fmt(e.coste)}${e.menosNatural ? " · menos natural" : ""}${e.estimada ? " · cantidad aproximada" : ""}${e.como === "parecido" ? " · parecido" : e.como === "equivalente" ? " · lo mismo con otro nombre" : e.como === "sustituto" ? " · sustituto: no hay uno igual" : ""}</span>`} />`)}</ul></section>`}
       </div>
     </div>
   </div>`;

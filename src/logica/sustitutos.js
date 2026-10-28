@@ -6,7 +6,7 @@ function elegirParecido(C, ref, lista, cant, como, minimo = 0, banda = 0.1) {
   let top = cands.filter(x => x.sim >= max - banda).map(x => x.p);
   if (AJ.saludable) { const m = Math.max(...top.map(c => c.sa)); top = top.filter(c => c.sa === m); }
   let mejor = null;
-  for (const c of top) { const r = costeCon(c, ref, cant); if (!mejor || r.coste < mejor.coste) mejor = r; }
+  for (const c of top) { const r = costeCon(C, c, ref, cant); if (!mejor || r.coste < mejor.coste) mejor = r; }
   return { ...mejor, como, sim: max };
 }
 /* sin el mismo producto, otro nombre para lo mismo ni uno del mismo tipo: el más parecido de su categoría

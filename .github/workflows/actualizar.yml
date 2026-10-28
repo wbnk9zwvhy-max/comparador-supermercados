@@ -1,0 +1,80 @@
+# Actualización diaria del comparador sin Claude (0 tokens): raspa precios, lee ingredientes,
+# baja fotos nuevas, construye la app, pasa las pruebas con los datos del día y publica en GitHub Pages.
+# Si un súper falla, se usan sus datos del día anterior (rama «datos»). Si las pruebas fallan, no se publica.
+name: Actualizar precios
+
+on:
+  schedule:
+    - cron: "0 9 * * *"   # 10:00 en Madrid en horario de invierno (11:00 en verano)
+  workflow_dispatch:       # botón «Run workflow» para lanzarlo a mano
+
+permissions:
+  contents: write          # para guardar los datos del día en la rama «datos»
+  pages: write
+  id-token: write
+
+concurrency:
+  group: actualizar
+  cancel-in-progress: false
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Dependencias
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr > /dev/null
+          python -m venv .venv && .venv/bin/pip install -q requests rapidfuzz pillow
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Datos de ayer (rama «datos»)
+        run: ci/datos.sh traer
+
+      - name: Fotos ya descargadas
+        uses: actions/cache@v4
+        with:
+          path: fotos
+          key: fotos-${{ github.run_id }}
+          restore-keys: fotos-
+
+      - name: Precios
+        run: ci/actualizar.sh precios
+
+      - name: Ingredientes, fotos y app
+        run: ci/actualizar.sh app
+
+      - name: Pruebas con los datos de hoy
+        run: npm run test:hoy && npm run test:py
+
+      - name: Guardar datos del día (rama «datos»)
+        if: success()
+        run: ci/datos.sh guardar
+
+      - name: Preparar web
+        run: ci/actualizar.sh web
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  publicar:
+    needs: actualizar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

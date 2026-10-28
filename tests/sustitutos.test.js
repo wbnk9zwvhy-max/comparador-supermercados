@@ -52,3 +52,32 @@ test("auditoría: 0 sustituciones menos naturales sin aviso (con y sin modo sano
     assert.deepEqual(silencio.slice(0, 5), [], `modo sano=${saludable}`);
   }
 });
+
+test("«Huevos» de Mercadona (sin formato): se estima la cantidad y no se cambia por media docena ni por huevos de codorniz", () => {
+  const ref = C.P.find(p => p.n === "Huevos" && p.s === S.Mercadona);
+  assert.equal(ref.q, null);
+  for (const t of ["Consum", "DIA"]) {
+    const e = en(ref, t);
+    assert.ok(e && e.estimada, t);
+    assert.doesNotMatch(e.p.n, /codorniz/i, t);
+    assert.ok(e.p.q * e.n * 12 >= 12, `${t}: ${e.n} × ${e.p.n} son menos de una docena`);
+  }
+});
+
+test("pienso, comida de bebé y productos infantiles nunca sustituyen a una compra normal", () => {
+  const paraOtros = p => /^(Bebé|Mascotas)$/.test(C.secciones[p.sec]) ||
+    /\b(perros?|gatos?|mascotas?|cachorros?|bebes?|infantil(es)?|junior|kids|ninos?|papillas?|potitos?)\b/.test(g("norm")(p.n));
+  const malos = [];
+  for (const ref of C.P.filter((p, i) => i % 5 === 0 && !paraOtros(p))) for (let s = 0; s < 4; s++) {
+    if (s === ref.s) continue;
+    const e = equivalente(C, ref, s, 1);
+    if (e && e.como !== "igual" && paraOtros(e.p)) malos.push(`${ref.n} → ${e.p.n}`);
+  }
+  assert.deepEqual(malos.slice(0, 5), []);
+});
+
+test("marcas fuertes: Oreo se cambia por galletas rellenas genéricas donde no hay Oreo", () => {
+  const ref = producto("Galletas Oreo Rellenas de Crema", "Consum");
+  assert.match(en(ref, "Mercadona").p.n, /galletas rellenas/i);
+  assert.match(en(ref, "DIA").p.n, /oreo/i);
+});

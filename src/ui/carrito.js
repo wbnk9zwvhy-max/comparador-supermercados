@@ -49,6 +49,7 @@ function GrupoTienda({ C, g, plan, envio, abrir, copiar }) {
         ${f.e.menosNatural && html`<div class="eq aviso">Menos natural que el que elegiste (${f.o.p.mo || NIVELES[nivelDe(f.o.p)]} → ${f.e.p.mo || NIVELES[nivelDe(f.e.p)]}): ${C.tiendas[g.s]} no tiene nada igual de natural</div>`}
         ${f.e.como === "sustituto" ? html`<div class="eq aviso">Sustituto: ${C.tiendas[g.s]} no tiene «${f.o.it.n}» ni uno del mismo tipo; es lo más parecido</div>`
           : f.e.como !== "igual" && html`<div class="eq">En lugar de ${f.o.it.n}${f.e.como === "parecido" ? " (parecido)" : f.e.como === "equivalente" ? ": aquí se llama así" : ""}</div>`}
+        ${f.e.estimada && html`<div class="eq">Cantidad aproximada: «${f.o.it.n}» no dice cuánto trae, se ha calculado por su precio</div>`}
         ${g.s !== f.o.p.s && f.o.por[f.o.p.s] && f.o.por[f.o.p.s].coste - f.e.coste >= 0.01 && html`<div class="eq">Ahorras ${fmt(r2(f.o.por[f.o.p.s].coste - f.e.coste))} frente a comprarlo en ${C.tiendas[f.o.p.s]}</div>`}
         ${chequeDe(f.e.p) > 0 && html`<div class="eq">Incluye ${fmt(r2(chequeDe(f.e.p) * f.e.n))} de Cheque Crece</div>`}</div>
       <span class="num" style=${{ fontWeight: 600 }}>${fmt(f.e.coste)}</span></div>`)}

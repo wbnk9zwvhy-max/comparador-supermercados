@@ -7,3 +7,9 @@ __pycache__/
 salida/
 node_modules/
 .venv/
+app/ingredientes/
+scripts/ingredientes_cache.json
+*.tmp
+web/
+indice_fotos.csv
+fallos_fotos.csv

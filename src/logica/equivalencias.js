@@ -12,11 +12,36 @@ function precioDeN(c, n) {
   if (c.pk && n >= c.pk[0]) { const packs = Math.floor(n / c.pk[0]) * c.pk[0]; total = packs * c.pk[1] + (n - packs) * c.p; }
   return Math.round((total - n * chequeDe(c)) * 100) / 100;
 }
-function costeCon(c, ref, cant) {
-  let n = cant;
-  if (ref.q && c.q && comparables(ref.u, c.u)) n = Math.max(1, Math.ceil(enBase(ref) * cant / enBase(c) - 0.03));
-  return { p: c, n, coste: precioDeN(c, n) };
+/* sin formato («Huevos» de Mercadona, sin cantidad) se estima cuánto trae con su precio y lo que cuesta el kg, L
+   o la docena de lo de su categoría en la misma tienda; así no se cambia por media docena solo porque es más barata */
+const NO_ALIMENTO = new Set(["Limpieza y hogar", "Higiene y belleza", "Otros", "Mascotas"]);
+function cantidadEstimada(C, ref) {
+  if (ref._qe !== undefined) return ref._qe;
+  ref._qe = null;
+  // solo en alimentación: en limpieza o higiene «unidad» no dice nada (un bastoncillo no es una compresa)
+  if (!(ref.p > 0) || ref.cat < 0 || NO_ALIMENTO.has(C.secciones[ref.sec])) return null;
+  const otros = (C.porTiendaSec.get(ref.s * 100 + ref.sec) || []).filter(p => p !== ref && p.cat === ref.cat && p.q && p.p > 0 && p.u != null && !p.gr);
+  const veces = new Map();
+  for (const p of otros) { const f = piezas(p.u) ? "piezas" : masa(p.u) ? "masa" : p.u; veces.set(f, (veces.get(f) || 0) + 1); }
+  const [familia, n] = [...veces.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+  if (!n || n < 3) return null;
+  const precios = otros.filter(p => (familia === "piezas" ? piezas(p.u) : familia === "masa" ? masa(p.u) : p.u === familia))
+    .map(p => p.p / enBase(p)).sort((a, b) => a - b);
+  const u = familia === "piezas" ? 2 : familia === "masa" ? 0 : familia;
+  return ref._qe = { base: ref.p / precios[precios.length >> 1], u };
 }
+function costeCon(C, c, ref, cant) {
+  let n = cant, estimada = false;
+  if (ref.q && c.q && comparables(ref.u, c.u)) n = Math.max(1, Math.ceil(enBase(ref) * cant / enBase(c) - 0.03));
+  else if (ref.q == null && c.q && c !== ref) {
+    const e = cantidadEstimada(C, ref);
+    if (e && comparables(e.u, c.u)) { n = Math.max(1, Math.round(e.base * cant / enBase(c))); estimada = true; }
+  }
+  return { p: c, n, coste: precioDeN(c, n), ...(estimada ? { estimada } : {}) };
+}
+// pienso, comida de bebé y productos infantiles nunca sustituyen a una compra normal (al revés sí se permite)
+const RX_PARA_OTROS = /\b(perros?|gatos?|mascotas?|cachorros?|felin\w*|canin\w*|bebes?|infantil(es)?|junior|kids|ninos?|ninas?|papillas?|potitos?|lactantes?)\b/;
+const paraOtros = (C, p) => p._po ?? (p._po = C.secciones[p.sec] === "Bebé" || C.secciones[p.sec] === "Mascotas" || RX_PARA_OTROS.test(norm(p.n)));
 /* Nunca se cambia lo que elegiste por algo menos natural: primero se busca entre lo igual o más natural que tu
    producto (según sus ingredientes) y solo si no hay ninguno se acepta uno menos natural, avisando. */
 let ESTRICTO = false;
@@ -40,19 +65,22 @@ function equivalenteDe(C, ref, s, cant) {
   if (ref.s === s) return { p: ref, n: cant, coste: precioDeN(ref, cant), como: "igual" };
   if (ref.g >= 0) {
     const m = (C.porGrupo.get(ref.g) || []).find(p => p.s === s);
-    if (m) return { ...costeCon(m, ref, cant), como: "igual" };
+    if (m) return { ...costeCon(C, m, ref, cant), como: "igual" };
   }
   const elegir = (lista, como) => {
     lista = naturalComoRef(ref, lista);
     if (!lista.length) return null;
     if (AJ.saludable) { const m = Math.max(...lista.map(c => c.sa)); lista = lista.filter(c => c.sa === m); }
     let mejor = null;
-    for (const c of lista) { const r = costeCon(c, ref, cant); if (!mejor || r.coste < mejor.coste) mejor = r; }
+    for (const c of lista) { const r = costeCon(C, c, ref, cant); if (!mejor || r.coste < mejor.coste) mejor = r; }
     return { ...mejor, como };
   };
   // nunca se cambia una compra normal por una pieza entera o un formato de hostelería
   const tamano = p => ref.gr || !p.gr;
-  const compatible = p => comparables(p.u, ref.u) && tamano(p);
+  // con la cantidad estimada, lo que cuesta mucho menos (o más) por unidad es otra cosa: huevos de codorniz por huevos
+  const est = ref.q == null ? cantidadEstimada(C, ref) : null;
+  const razonable = p => !est || !p.q || !comparables(est.u, p.u) || (x => x > 0.4 && x < 2.5)(p.p / enBase(p) / (ref.p / est.base));
+  const compatible = p => comparables(p.u, ref.u) && tamano(p) && (paraOtros(C, ref) || !paraOtros(C, p)) && razonable(p);
   const mismoTipo = C.T[ref.t].prods.filter(p => p.s === s && compatible(p));
   const r1 = elegir(mismoTipo, "tipo"); if (r1) return r1;
   // el mismo producto con otro nombre en esa tienda (gulas = delicias del mar de surimi; ternera de guisar = añojo para guisar)

@@ -391,7 +391,7 @@ def ocr_main():
 
     aceptados = dudosos = 0
     t0 = time.time()
-    with ThreadPoolExecutor(max_workers=max(2, os.cpu_count() or 2)) as ex:
+    with ThreadPoolExecutor(max_workers=min(6, max(2, os.cpu_count() or 2))) as ex:  # cada hilo descarga fotos: máximo 6
         for i, (k, (txt, q)) in enumerate(ex.map(uno, tareas), 1):
             e = cache.get(k) or {"t": None}
             e["ocr"] = HOY

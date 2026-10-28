@@ -84,7 +84,7 @@ def main():
                 continue
             if pid not in existentes:
                 tareas.append((pid, u, os.path.join(carpeta, pid + ".jpg")))
-        with ThreadPoolExecutor(max_workers=16) as ex:
+        with ThreadPoolExecutor(max_workers=6) as ex:  # máximo 6 a la vez: ser amable con los servidores
             for (pid, u, _), err in zip(tareas, ex.map(lambda t: baja(t[1], t[2]), tareas)):
                 if err:
                     fallos.append({"supermercado": nombre_tienda, "id": pid, "url": u, "error": err})
