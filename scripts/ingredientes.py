@@ -213,7 +213,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 
 import requests
-from PIL import Image
+from PIL import Image, ImageFilter, ImageOps
 
 import categorias as CAT
 import construir_app as APP
@@ -222,6 +222,9 @@ HOY = date.today().isoformat()
 REINTENTO = (date.today() - timedelta(days=60)).isoformat()
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 TESSDATA = os.path.expanduser("~/.cache/tessdata")
+# 2: imagen con contraste automático y enfoque antes de leerla (en una muestra de 80 productos de Consum,
+# 8 lecturas aceptadas frente a 2). Lo que se leyó con una versión anterior y no salió se reintenta una vez.
+OCR_VERSION = 2
 SIN_INGREDIENTES = {"limpieza", "higiene", "otros", "mascotas"}
 
 RX_INICIO = re.compile(r"\bingred[il1]ent[eo]s?\b\s*[:;.,]?", re.I)
@@ -255,7 +258,8 @@ def ocr(img_bytes):
         im.thumbnail((2000, 2000))
     if max(im.size) < 1200:  # letra pequeña: mejor ampliada
         f = 1200 / max(im.size)
-        im = im.resize((int(im.width * f), int(im.height * f)))
+        im = im.resize((int(im.width * f), int(im.height * f)), Image.LANCZOS)
+    im = ImageOps.autocontrast(im, cutoff=1).filter(ImageFilter.SHARPEN)
     buf = io.BytesIO()
     im.save(buf, "PNG")
     r = subprocess.run(["tesseract", "stdin", "stdout", "-l", "spa", "--psm", "3"], input=buf.getvalue(),
@@ -278,15 +282,17 @@ def vocabulario(cache):
 
 def extraer(texto, vocab):
     """(lista de ingredientes, puntuación 0-1) a partir del texto leído en una foto."""
+    texto = unicodedata.normalize("NFC", texto)  # tesseract a veces da «ó» como «o» + tilde suelta
     m = RX_INICIO.search(texto)
     if not m:
         return None, 0
     resto = texto[m.end():m.end() + 1500]
+    resto = re.sub(r"-\n(\w)", r"\1", resto)           # palabras partidas al final de línea
+    resto = re.sub(r"\s+", " ", resto)                  # antes de buscar el final: «Información\nnutricional»
     f = RX_FIN.search(resto)
     if f:
         resto = resto[:f.start()]
-    resto = re.sub(r"-\n(\w)", r"\1", resto)           # palabras partidas al final de línea
-    resto = re.sub(r"\s+", " ", resto).strip(" .:;,-")
+    resto = resto.strip(" .:;,-—")
     # etiquetas bilingües (Mercadona): se corta donde empieza la versión en portugués
     pt = RX_PORTUGUES.search(resto)
     if pt and pt.start() > 10:
@@ -295,7 +301,8 @@ def extraer(texto, vocab):
     if RX_TABLA.search(resto):
         return None, 0  # se ha colado la tabla nutricional: lectura poco fiable
     palabras = re.findall(r"[a-záéíóúñü]{2,}", resto.lower())
-    if len(palabras) < 2:
+    # una sola palabra («Alcachofas») solo si es un ingrediente conocido
+    if len(palabras) < 2 and not (palabras and sin_tildes(palabras[0]) in vocab):
         return None, 0
     conocidas = sum(1 for w in palabras if sin_tildes(w) in vocab or len(w) == 2 and w in ("de", "en", "al", "la", "el", "y"))
     return resto[:900], conocidas / len(palabras)
@@ -341,7 +348,7 @@ def candidatos(cache, maximo):
         for x in prods:
             k = f"{pref}:{x['id']}"
             e = cache.get(k) or {}
-            if e.get("t") or (e.get("ocr") and e["ocr"] >= REINTENTO):
+            if e.get("t") or (e.get("ocr") and e["ocr"] >= REINTENTO and e.get("ov", 1) >= OCR_VERSION):
                 continue
             sec_k = APP.SECCIONES[APP.seccion(s, x)][0]
             if sec_k in SIN_INGREDIENTES:
@@ -351,7 +358,8 @@ def candidatos(cache, maximo):
             if CAT.naturalidad(cat, x.get("nombre") or "", None, None, sec_k)[1].startswith("Natural: alimento sin procesar"):
                 continue  # fruta, verdura, carne o pescado frescos: no llevan lista de ingredientes
             out.append((k, x, fn))
-    # primero los que más se comparan (Consum es la que menos publica)
+    # primero los nunca leídos, luego los dudosos (los más cerca de salir) y luego el resto
+    out.sort(key=lambda t: 0 if not (cache.get(t[0]) or {}).get("ocr") else 1 if (cache.get(t[0]) or {}).get("dudoso") else 2)
     return out[:maximo]
 
 
@@ -395,6 +403,7 @@ def ocr_main():
         for i, (k, (txt, q)) in enumerate(ex.map(uno, tareas), 1):
             e = cache.get(k) or {"t": None}
             e["ocr"] = HOY
+            e["ov"] = OCR_VERSION
             if txt and q >= 0.8:
                 e.update({"t": txt, "f": "ocr", "q": round(q, 2), "d": HOY})
                 aceptados += 1
