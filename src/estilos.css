@@ -6,7 +6,7 @@
   --tarjeta: #FFFFFF;
   --tinta: #161B33;            /* azul marino */
   --tinta-2: #5E6480;
-  --tinta-3: #8A8FA8;
+  --tinta-3: #686D86;          /* el gris más claro con contraste 4,5:1 sobre el fondo (WCAG AA) */
   --linea: rgba(22, 27, 51, .09);
   --relleno: #E8EAF1;          /* fondos de controles y chips */
   --primario: #161B33;
@@ -15,7 +15,7 @@
   --etiqueta-tinta: #161B33;
   --sano: #157A4A; --sano-fondo: #E2F4EA;
   --cheque: #B4470A; --cheque-fondo: #FFF0E4;
-  --oferta: #C81D57;
+  --oferta: #C81D57; --oferta-tinta: #FFFFFF;
   --foco: #3355E0;
   --vidrio: rgba(242, 243, 247, .78);
   --sombra-1: 0 1px 2px rgba(22, 27, 51, .05), 0 1px 1px rgba(22, 27, 51, .03);
@@ -29,17 +29,17 @@
   --r-tarjeta: 22px; --r-control: 14px;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --fondo: #0E1020; --tarjeta: #191C30; --tinta: #F1F2F8; --tinta-2: #A9AEC7; --tinta-3: #7D829C;
+  --fondo: #0E1020; --tarjeta: #191C30; --tinta: #F1F2F8; --tinta-2: #A9AEC7; --tinta-3: #8A8FA9;
   --linea: rgba(255, 255, 255, .08); --relleno: #262A42; --primario: #F1F2F8; --primario-tinta: #0E1020;
   --etiqueta: #FFD43B; --etiqueta-tinta: #161B33; --sano: #6FD39B; --sano-fondo: #153325; --cheque: #FFA366; --cheque-fondo: #3A2414;
-  --oferta: #FF6E9C; --foco: #8EA3FF; --vidrio: rgba(14, 16, 32, .74);
+  --oferta: #FF6E9C; --oferta-tinta: #0E1020; --foco: #8EA3FF; --vidrio: rgba(14, 16, 32, .74);
   --sombra-1: 0 1px 2px rgba(0, 0, 0, .3); --sombra-2: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .3); --sombra-3: 0 10px 40px rgba(0, 0, 0, .55);
   color-scheme: dark } }
 :root[data-theme="dark"] {
-  --fondo: #0E1020; --tarjeta: #191C30; --tinta: #F1F2F8; --tinta-2: #A9AEC7; --tinta-3: #7D829C;
+  --fondo: #0E1020; --tarjeta: #191C30; --tinta: #F1F2F8; --tinta-2: #A9AEC7; --tinta-3: #8A8FA9;
   --linea: rgba(255, 255, 255, .08); --relleno: #262A42; --primario: #F1F2F8; --primario-tinta: #0E1020;
   --etiqueta: #FFD43B; --etiqueta-tinta: #161B33; --sano: #6FD39B; --sano-fondo: #153325; --cheque: #FFA366; --cheque-fondo: #3A2414;
-  --oferta: #FF6E9C; --foco: #8EA3FF; --vidrio: rgba(14, 16, 32, .74);
+  --oferta: #FF6E9C; --oferta-tinta: #0E1020; --foco: #8EA3FF; --vidrio: rgba(14, 16, 32, .74);
   --sombra-1: 0 1px 2px rgba(0, 0, 0, .3); --sombra-2: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .3); --sombra-3: 0 10px 40px rgba(0, 0, 0, .55);
   color-scheme: dark }
 
@@ -124,7 +124,7 @@ p { margin: 0; text-wrap: pretty; }
   font-size: 14px; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; transition: transform 120ms var(--ease-out), background-color 150ms ease; }
 .chip[aria-pressed="true"] { background: var(--primario); color: var(--primario-tinta); box-shadow: none; }
 .chip:active { transform: scale(.96); }
-.chip .cuenta { opacity: .55; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chip .cuenta { opacity: .7; font-weight: 500; font-variant-numeric: tabular-nums; }
 .chip .foto { border-radius: 8px; }
 @media (hover: hover) and (pointer: fine) { .chip:not([aria-pressed="true"]):hover { background: var(--relleno); } }
 
@@ -134,7 +134,7 @@ p { margin: 0; text-wrap: pretty; }
 .tag.sano { color: var(--sano); background: var(--sano-fondo); }
 .tag.cheque { color: var(--cheque); background: var(--cheque-fondo); }
 .tag.neutra { color: var(--tinta-2); background: var(--relleno); }
-.tag.oferta { color: #fff; background: var(--oferta); }
+.tag.oferta { color: var(--oferta-tinta); background: var(--oferta); }
 .tag.ultra { color: var(--cheque); background: var(--cheque-fondo); }
 .tag.aviso-tag { color: var(--cheque); background: var(--cheque-fondo); }
 /* nivel de naturalidad: cinco barras, como un medidor */

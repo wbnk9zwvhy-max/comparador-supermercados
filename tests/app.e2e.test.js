@@ -72,3 +72,20 @@ test("una cesta guardada da botones «Llenar carrito» con la cesta codificada",
   assert.match(await pg.evaluate(() => MARCADOR), /^javascript:/);
   await ctx.close();
 });
+
+test("accesibilidad (axe-core, WCAG AA): sin problemas en la búsqueda, claro y oscuro", async () => {
+  const AXE = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8");
+  for (const tema of ["light", "dark"]) {
+    const ctx = await browser.newContext({ locale: "es-ES", viewport: { width: 390, height: 844 }, colorScheme: tema });
+    const pg = await ctx.newPage();
+    await pg.goto(base + "index.html#buscar");
+    await pg.waitForSelector("#contenido:not(:has([aria-busy]))", { timeout: 20000 });
+    await pg.fill("#q", "leche de almendras");
+    await pg.getByText("Bebida de almendras").first().waitFor();
+    await pg.addScriptTag({ content: AXE });
+    const fallos = await pg.evaluate(async () => (await axe.run(document, { runOnly: ["wcag2a", "wcag2aa"] })).violations
+      .map(v => `${v.id}: ${v.nodes.slice(0, 3).map(n => n.target.join(" ")).join(", ")}`));
+    assert.deepEqual(fallos, [], tema);
+    await ctx.close();
+  }
+});
