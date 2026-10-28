@@ -1,20 +1,20 @@
 {
   "name": "comparador-supermercados",
   "version": "1.0.0",
-  "description": "App web que compara Mercadona, Consum, DIA y LIDL. Hoy está publicada como Artifact de claude.ai (https://claude.ai/artifact/9Au9HZhPtGrPp3oLXm6S91). Una tarea programada en la nube la actualiza cada día a las 10:00.",
-  "main": "index.js",
+  "description": "Comparador de precios de Mercadona, Consum, DIA y LIDL",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "node build.js",
+    "test": "node build.js && node --test \"tests/*.test.js\" && npm run test:py",
+    "test:py": ".venv/bin/python -m unittest discover -s tests -p \"test_*.py\"",
+    "test:hoy": "CATALOGO=app/catalogo.json node --test \"tests/*.test.js\"",
+    "servir": "cd app && python3 -m http.server 8765"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "playwright": "^1.64.1",
     "terser": "^5.51.2"
-  }
+  },
+  "private": true
 }
