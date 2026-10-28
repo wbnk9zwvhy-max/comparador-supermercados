@@ -18,6 +18,12 @@ function consulta(q) {
   const vegetal = t.some(w => VEGETAL.test(w));
   return t.map(w => w === "leche" && vegetal ? ["leche", "bebid"] : [w, ...(SINONIMOS[w] || [])]);
 }
+// palabras distintas con la misma raíz (la raíz quita el género): buscando una, no vale la otra
+const CONFUNDIBLES = { pulpo: "pulpa", pulpa: "pulpo", pasta: "pasto", bolsa: "bolso", bolso: "bolsa", puerta: "puerto", puerto: "puerta" };
+const confundido = (q, nombre) => norm(q).split(" ").some(w => {
+  const w1 = w.replace(/s$/, ""), otra = CONFUNDIBLES[w1];
+  return otra && new RegExp(`\\b${otra}s?\\b`).test(nombre) && !new RegExp(`\\b${w1}s?\\b`).test(nombre);
+});
 const empieza = (o, alts) => o && alts.some(a => o.startsWith(a));
 // la misma palabra (las raíces ya quitan plural y género: «limones» = «limón»), no otra que empieza igual («limonada», «salsa»)
 const igual = (o, alts) => o && alts.some(a => o === a);

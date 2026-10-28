@@ -72,3 +72,21 @@ test("las 55 búsquedas de siempre devuelven alguna categoría", () => {
   const sin = qs.filter(q => !primeraCategoria(q).cat);
   assert.deepEqual(sin, []);
 });
+
+test("«tortilla de patatas» → Tortillas, no patatas sueltas (el concepto «patata» no basta)", () => {
+  assert.equal(primeraCategoria("tortilla de patatas").cat.clave, "pr_tortilla");
+});
+
+test("«pulpo» no trae «pulpa» de fruta (misma raíz, otra palabra)", () => {
+  const { r } = primeraCategoria("pulpo");
+  assert.ok(r.res.every(x => !/\bpulpa\b/i.test(x.p.n)), r.res.filter(x => /pulpa/i.test(x.p.n)).map(x => x.p.n).join(", "));
+  assert.equal(primeraCategoria("pulpa de aguacate").cat.clave, "fruta");
+});
+
+test("sin resultados con todas las palabras se quitan las últimas y se avisa", () => {
+  const { r, cat } = primeraCategoria("pulpo a la gallega");
+  assert.equal(JSON.stringify(r.sin), JSON.stringify(["gallega"])); // el array viene de otro contexto vm
+  assert.equal(cat.nombre, "Marisco");
+  assert.ok(primeraCategoria("pizza congelada").r.res.length > 0);
+  assert.equal(primeraCategoria("leche").r.sin, undefined);
+});

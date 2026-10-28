@@ -176,6 +176,7 @@ function Buscar({ C, q, setQ, cantidadDe, poner, abrir, aj }) {
   if (!r || !r.res.length) return html`<div class="vacio"><span class="icono-grande">${Icono.lupa}</span><h2 class="h2">Nada para «${qd}»</h2>
     <p>Prueba con menos palabras o con el nombre genérico del producto: «leche» en lugar de una marca.</p></div>`;
   return html`<div>
+    ${r.sin && html`<p class="peq" role="status" style=${{ margin: "0 0 10px" }}>Nada con «${r.sin.join(" ")}»: se muestra lo que hay sin esa${r.sin.length > 1 ? "s palabras" : " palabra"}.</p>`}
     <${QueBuscas} C=${C} opciones=${opciones} cat=${cat} elegir=${setCatSel} />
     <div class="seccion" style=${{ marginTop: 14 }}><${Comparativa} C=${C} comp=${comp} cantidadDe=${cantidadDe} poner=${poner} abrir=${abrir} refinar=${irA} q=${qd}
       cat=${cat} grandes=${grandes} setGrandes=${setGrandes} /></div>
