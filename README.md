@@ -1,42 +1,108 @@
 # Comparador de supermercados
 
-App web que compara Mercadona, Consum, DIA y LIDL. Hoy está publicada como Artifact de claude.ai
-(https://claude.ai/artifact/9Au9HZhPtGrPp3oLXm6S91). Una tarea programada en la nube la actualiza cada día a las 10:00.
+App web que compara Mercadona, Consum, DIA y LIDL. Publicada como Artifact de claude.ai
+(https://claude.ai/artifact/9Au9HZhPtGrPp3oLXm6S91); la actualización diaria puede hacerse sin Claude con
+GitHub Actions y GitHub Pages (ver «Actualización diaria»).
 
-## Piezas
+## Puesta en marcha
+
+```bash
+uv venv --python 3.12 --managed-python .venv          # Python con OpenSSL (el de macOS usa LibreSSL)
+uv pip install --python .venv/bin/python requests rapidfuzz pillow
+brew install tesseract
+npm install && npx playwright install chromium
+```
+
+> El Python 3.12/3.13 de Homebrew falla en este Mac (`pyexpat` no encaja con la libexpat del sistema);
+> por eso el entorno se crea con `uv` y un Python autónomo.
+
+## Día a día
+
+| Orden | Qué hace |
+|---|---|
+| `npm test` | build + pruebas de la lógica en Node (~2 s), app en Chromium, accesibilidad (axe-core) y Python |
+| `npm run build` | junta `src/` en `app/index.html` (un solo archivo, como necesita el artifact) |
+| `npm run test:hoy` | las mismas pruebas con `app/catalogo.json` (los datos del día) en lugar del catálogo fijo |
+| `npm run servir` | sirve `app/` en http://localhost:8765 |
+| `node tests/medir/carga-movil.js` | tiempo de carga como en un móvil (CPU 4× más lenta, 4G) |
+| `node tests/medir/accesibilidad.js` | axe-core en las cuatro pestañas, en claro y oscuro |
+
+**Nunca se edita `app/index.html` a mano**: se genera con `npm run build`.
+
+## Código de la app (`src/`)
+
+Los módulos son scripts clásicos que comparten ámbito global, igual que cuando todo estaba en un archivo;
+`build.js` los concatena en orden, mete los estilos y el marcador minificado con terser.
 
 | Archivo | Qué hace |
 |---|---|
-| `scripts/scraper_mercadona.py` | Catálogo de tienda.mercadona.es (API pública `/api/categories/`, almacén `vlc1`). ~4.360 productos |
-| `scripts/scraper_consum.py` | Catálogo de tienda.consum.es (`/api/rest/V1.0/catalog/product`). ~9.300 |
-| `scripts/scraper_dia.py` | Catálogo de dia.es (`/api/v1/plp-back/reduced`). **Sin cabeceras de navegador**: con User-Agent de Chrome DIA responde 403. ~5.780 |
-| `scripts/scraper_lidl.py` | LIDL no vende comida online. Lee las 715 fichas de supermercado del mapa del sitio (id de 8 cifras) decodificando `__NUXT_DATA__` (devalue) y añade su buscador. ~274 con precio |
-| `scripts/descargar_fotos.py` | Foto de cada producto (`CARPETA_DATOS CARPETA_FOTOS [tiendas]`) |
-| `scripts/ingredientes.py` | Caché de ingredientes: web de Mercadona y DIA, Open Food Facts por EAN (Consum y LIDL) y, para lo que falta, OCR de las fotos del envase con tesseract `spa` (hasta 300 al día). Imprime «Ingredientes: listo» |
-| `scripts/categorias.py` | Categorías comunes, **naturalidad** (nivel 0-4 + desempate) y **equivalencias** entre tiendas (FRASES, PALABRAS, IGNORAR) |
-| `scripts/construir_app.py` | Genera `catalogo.json`, `miniaturas/mNNN.webp` (sprites 10×10 de 112 px) e `ingredientes/iNN.json` (24 trozos por hash de la clave) |
-| `scripts/marcador.js` | Bookmarklet «Llenar carrito» (fuente legible; minificado con terser va dentro de `index.html` como `MARCADOR`) |
-| `app/index.html` | La app (React 18 + htm desde CDN, todo en un archivo) |
-| `datos/ingredientes_cache.json` | Caché de ingredientes (~12.000 productos con lista) |
-| `tests/*.js` | Pruebas con Playwright usadas durante el desarrollo (rutas adaptadas; servir `app/` en `localhost:8765`) |
+| `src/plantilla.html`, `src/estilos.css` | cabecera, CSS (tokens de color en `:root`) |
+| `src/logica/utilidades.js` | normalizar, raíces, sinónimos, `CONFUNDIBLES` (pulpo ≠ pulpa) |
+| `src/logica/catalogo.js` | `preparar()`: lee `catalogo.json` |
+| `src/logica/ajustes.js` | ajustes, precio efectivo, **naturalidad** en la app (`nivelDe`, `mejorQue`) |
+| `src/logica/busqueda.js` | `buscar()`: palabras, conceptos y búsqueda relajada si no hay nada |
+| `src/logica/intencion.js` | `intencion()`: qué categoría quiere decir quien busca |
+| `src/logica/comparar.js` | `comparar()`: la comparativa entre súper |
+| `src/logica/equivalencias.js` | `equivalente()`: sustituto en otra tienda; nunca menos natural sin avisar; cantidad estimada |
+| `src/logica/sustitutos.js` | `elegirParecido()`, `sustituto()` |
+| `src/logica/planificador.js` | `planificar()`: dónde comprar la cesta, con envíos |
+| `src/ui/*.js` | React 18 + htm (estado, piezas, buscar, lista, comprar, carrito, ajustes, ficha, app) |
 
-## Ejecutar todo en local
+`src/logica` no usa React ni el DOM: las pruebas la cargan en Node con `tests/cargar.js`.
+
+## Pruebas (`tests/`)
+
+- `busqueda.test.js`, `sustitutos.test.js`, `planificador.test.js`: los casos que deben seguir funcionando
+  (leche de almendras, limón, sal, gulas, ternera para guisar, pechuga de pavo, auditoría «0 menos natural sin aviso»,
+  «hasta k súper» nunca más caro…).
+- `app.e2e.test.js`: la app en Chromium (búsqueda, pestañas, «Llenar carrito», accesibilidad).
+- `build.test.js`: un solo `index.html` con el marcador válido.
+- `test_naturalidad.py`, `test_ocr.py`: criterio de «sano = natural» y lectura de ingredientes de las fotos.
+- `fijos/catalogo-2026-10-28.json.gz`: catálogo publicado el 28/10/2026; las pruebas no cambian cada día.
+- `explorar/`: los scripts de exploración de Claude Chat (sin asserts; `bm_test.js` prueba el marcador en las webs reales).
+
+## Datos (`scripts/`)
+
+| Archivo | Qué hace |
+|---|---|
+| `scraper_mercadona.py` | API pública `/api/categories/`, almacén `vlc1`. ~4.360 productos |
+| `scraper_consum.py` | `/api/rest/V1.0/catalog/product`. ~9.300 |
+| `scraper_dia.py` | `/api/v1/plp-back/reduced`. ~5.780. **Sin cabeceras de navegador** (DIA responde 403). Desde un Mac doméstico DIA bloquea igualmente (antibots); funciona desde la nube |
+| `scraper_lidl.py` | fichas del mapa del sitio (`__NUXT_DATA__`). ~274 con precio |
+| `ingredientes.py` | caché de ingredientes: web (Mercadona, DIA), Open Food Facts por EAN (Consum, LIDL) y OCR de fotos (hasta 300 al día; contraste + enfoque; solo se usan lecturas ≥ 0,8) |
+| `descargar_fotos.py` | foto de cada producto (solo las nuevas) |
+| `categorias.py` | categorías, **naturalidad** (nivel 0-4 + desempate) y **equivalencias** (FRASES, PALABRAS, IGNORAR) |
+| `construir_app.py` | `catalogo.json`, `miniaturas/mNNN.webp`, `ingredientes/iNN.json` |
+| `marcador.js` | marcador «Llenar carrito» (el build lo minifica y lo mete en `index.html`) |
+
+Todos con pausas de 0,3-0,4 s y como mucho 6 hilos. **No borrar `datos/ingredientes_cache.json`** (unas 2 h de OCR y OFF).
 
 ```bash
-pip install requests rapidfuzz pillow        # + tesseract instalado (brew install tesseract)
 cd scripts
-cp ../datos/ingredientes_cache.json .
-python3 scraper_mercadona.py && python3 scraper_consum.py && python3 scraper_dia.py && python3 scraper_lidl.py
-python3 ingredientes.py ingredientes_cache.json        # descarga spa.traineddata a ~/.cache/tessdata si falta
-python3 descargar_fotos.py . ../fotos
-python3 construir_app.py ../fotos ../app               # escribe catalogo.json, miniaturas/, ingredientes/
-cd ../app && python3 -m http.server 8765               # y abrir http://localhost:8765
+for t in mercadona consum dia lidl; do ../.venv/bin/python scraper_$t.py; done
+../.venv/bin/python ingredientes.py ../datos/ingredientes_cache.json
+../.venv/bin/python descargar_fotos.py . ../fotos
+cp ../datos/ingredientes_cache.json . && ../.venv/bin/python construir_app.py ../fotos ../app
+cd .. && npm run build && npm run test:hoy
 ```
 
-Faltan en el zip (se regeneran): `fotos/`, `catalogo.json`, `miniaturas/`, `ingredientes/` y `logos/*.png`.
-Los logos están publicados en el artifact (`logos/mercadona.png`, `consum.png`, `dia.png`, `lidl.png`).
+Se regeneran y no van en git: `fotos/`, `app/catalogo.json`, `app/miniaturas/`, `app/ingredientes/`, `scripts/productos_*`.
 
-## Formato de catalogo.json (lo lee `preparar()` en index.html)
+## Actualización diaria sin tokens (GitHub Actions + Pages)
+
+`.github/workflows/actualizar.yml` se ejecuta cada día a las 10:00 (Madrid, horario de invierno):
+precios → ingredientes y OCR → fotos nuevas → construir → **pruebas con los datos del día** → publicar en GitHub Pages.
+
+- Si un súper falla, se usan sus datos del día anterior (rama `datos`, que se reescribe cada día sin historial).
+- Si las pruebas fallan, no se publica: la web sigue con los datos de ayer.
+- Las fotos se guardan en la caché de Actions (la primera vez se bajan todas, ~20.000).
+- En GitHub Pages la lista de cada persona se guarda en su navegador (`localStorage`); en el artifact, en la nube de claude.ai.
+
+Para activarla: crear el repositorio en GitHub, subir esta carpeta, y en *Settings → Pages* elegir
+*Source: GitHub Actions*. La primera ejecución se lanza desde *Actions → Actualizar precios → Run workflow*.
+Para el artifact, publicar `app/` con Claude cuando se quiera (no hace falta a diario).
+
+## Formato de catalogo.json (lo lee `preparar()`)
 
 `productos[i]` = `[tienda, id, nombre, marca, precio, precio_antes, precio_unidad, unidad, cantidad, seccion, tipo, grupo, foto,
 url, busca, categoria, formato_grande, cheque_crece, pack, salud, motivo_salud, ingredientes_principales]`.
