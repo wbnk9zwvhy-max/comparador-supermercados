@@ -1,0 +1,9 @@
+fotos/
+miniaturas/
+catalogo.json
+productos_*.json
+productos_*.csv
+__pycache__/
+salida/
+node_modules/
+.venv/

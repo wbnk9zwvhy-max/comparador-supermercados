@@ -1,0 +1,1734 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta charset="utf-8">
+<title>Comparador de supermercados</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#F2F3F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1020" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Onest:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app de compra al estilo iOS. Móvil: una columna, barra de pestañas translúcida y barra flotante con tu compra.
+   Escritorio (≥ 960 px): menú lateral, contenido central y panel «Tu compra» siempre a la vista.
+   La etiqueta amarilla del lineal marca siempre lo más barato. */
+:root {
+  --fondo: #F2F3F7;            /* gris agrupado de iOS, con un punto azul */
+  --tarjeta: #FFFFFF;
+  --tinta: #161B33;            /* azul marino */
+  --tinta-2: #5E6480;
+  --tinta-3: #8A8FA8;
+  --linea: rgba(22, 27, 51, .09);
+  --relleno: #E8EAF1;          /* fondos de controles y chips */
+  --primario: #161B33;
+  --primario-tinta: #FFFFFF;
+  --etiqueta: #FFD43B;         /* la etiqueta amarilla del lineal: «el más barato» */
+  --etiqueta-tinta: #161B33;
+  --sano: #157A4A; --sano-fondo: #E2F4EA;
+  --cheque: #B4470A; --cheque-fondo: #FFF0E4;
+  --oferta: #C81D57;
+  --foco: #3355E0;
+  --vidrio: rgba(242, 243, 247, .78);
+  --sombra-1: 0 1px 2px rgba(22, 27, 51, .05), 0 1px 1px rgba(22, 27, 51, .03);
+  --sombra-2: 0 1px 2px rgba(22, 27, 51, .06), 0 8px 24px rgba(22, 27, 51, .08);
+  --sombra-3: 0 10px 40px rgba(22, 27, 51, .22);
+  --display: "Bricolage Grotesque", "Arial Narrow", system-ui, sans-serif;
+  --texto: "Onest", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+  --barra: 58px;
+  --r-tarjeta: 22px; --r-control: 14px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --fondo: #0E1020; --tarjeta: #191C30; --tinta: #F1F2F8; --tinta-2: #A9AEC7; --tinta-3: #7D829C;
+  --linea: rgba(255, 255, 255, .08); --relleno: #262A42; --primario: #F1F2F8; --primario-tinta: #0E1020;
+  --etiqueta: #FFD43B; --etiqueta-tinta: #161B33; --sano: #6FD39B; --sano-fondo: #153325; --cheque: #FFA366; --cheque-fondo: #3A2414;
+  --oferta: #FF6E9C; --foco: #8EA3FF; --vidrio: rgba(14, 16, 32, .74);
+  --sombra-1: 0 1px 2px rgba(0, 0, 0, .3); --sombra-2: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .3); --sombra-3: 0 10px 40px rgba(0, 0, 0, .55);
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --fondo: #0E1020; --tarjeta: #191C30; --tinta: #F1F2F8; --tinta-2: #A9AEC7; --tinta-3: #7D829C;
+  --linea: rgba(255, 255, 255, .08); --relleno: #262A42; --primario: #F1F2F8; --primario-tinta: #0E1020;
+  --etiqueta: #FFD43B; --etiqueta-tinta: #161B33; --sano: #6FD39B; --sano-fondo: #153325; --cheque: #FFA366; --cheque-fondo: #3A2414;
+  --oferta: #FF6E9C; --foco: #8EA3FF; --vidrio: rgba(14, 16, 32, .74);
+  --sombra-1: 0 1px 2px rgba(0, 0, 0, .3); --sombra-2: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .3); --sombra-3: 0 10px 40px rgba(0, 0, 0, .55);
+  color-scheme: dark }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+@media (pointer: fine) { html { overscroll-behavior: none; } }
+body { background: var(--fondo); color: var(--tinta); font: 16px/1.42 var(--texto); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--fondo); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; -webkit-user-select: none; user-select: none; }
+:focus-visible { outline: 2.5px solid var(--foco); outline-offset: 2px; }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.salto { position: absolute; left: 12px; top: -60px; z-index: 60; background: var(--primario); color: var(--primario-tinta); padding: 10px 14px; border-radius: 10px; }
+.salto:focus { top: calc(env(safe-area-inset-top, 0px) + 8px); }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { margin: 0; text-wrap: pretty; }
+
+/* ---------- estructura ---------- */
+.marco { min-height: 100%; }
+.centro { width: 100%; max-width: 680px; margin: 0 auto; min-width: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 calc(var(--barra) + env(safe-area-inset-bottom, 0px) + 96px); }
+.lateral, .panel { display: none; }
+@media (min-width: 960px) {
+  .marco { display: grid; grid-template-columns: 232px minmax(0, 1fr) 360px; gap: 0; max-width: 1360px; margin: 0 auto; }
+  .lateral { display: flex; flex-direction: column; gap: 6px; position: sticky; top: 0; height: 100vh; padding: 28px 16px 24px 24px; }
+  .panel { display: block; position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 24px 24px 24px 8px; }
+  .centro { max-width: 760px; padding-left: 24px; padding-right: 24px; padding-block: 0 48px; }
+  .tabbar, .barra-compra { display: none !important; }
+}
+
+/* ---------- cabecera ---------- */
+.cab { padding-top: 18px; display: grid; gap: 4px; }
+.titulo-grande { font: 800 32px/1.05 var(--display); letter-spacing: -.02em; }
+.cab .sub { color: var(--tinta-2); font-size: 14px; }
+.buscador-wrap { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -16px; padding: 10px 16px 10px;
+  background: var(--vidrio); -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px); }
+@media (min-width: 960px) { .buscador-wrap { margin-inline: -24px; padding-inline: 24px; } }
+.buscador { position: relative; }
+.buscador input { width: 100%; height: 48px; border-radius: 14px; border: 0; background: var(--tarjeta); box-shadow: var(--sombra-1), inset 0 0 0 1px var(--linea);
+  padding: 0 46px; font-size: 17px; -webkit-appearance: none; appearance: none; }
+.buscador input::placeholder { color: var(--tinta-3); }
+.buscador input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.buscador .lupa { position: absolute; left: 15px; top: 14px; width: 20px; height: 20px; color: var(--tinta-3); pointer-events: none; }
+.borrar { position: absolute; right: 4px; top: 4px; width: 40px; height: 40px; border: 0; background: none; border-radius: 10px; color: var(--tinta-3); display: grid; place-items: center; }
+
+/* ---------- piezas comunes ---------- */
+.logo { display: block; flex: none; border-radius: 22%; background: #fff; box-shadow: 0 0 0 1px rgba(22, 27, 51, .08); object-fit: contain; }
+.tienda-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; min-width: 0; white-space: nowrap; }
+.foto { flex: none; border-radius: 14px; background-color: #fff; background-repeat: no-repeat; }
+.foto.vacia { display: grid; place-items: center; color: #9AA0B6; font-size: 11px; background: #fff; }
+.tarjeta { background: var(--tarjeta); border-radius: var(--r-tarjeta); box-shadow: var(--sombra-1); }
+.seccion { display: grid; gap: 12px; margin-top: 26px; min-width: 0; }
+.seccion > * { min-width: 0; }
+.seccion-cab { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.h2 { font: 700 21px/1.2 var(--display); letter-spacing: -.01em; }
+.h3 { font: 700 17px/1.25 var(--display); }
+.sub { color: var(--tinta-2); font-size: 14px; }
+.peq { font-size: 13px; color: var(--tinta-2); }
+.enlace-btn { border: 0; background: none; padding: 0; color: var(--foco); font-weight: 600; font-size: inherit; min-height: 32px; }
+@media (hover: hover) and (pointer: fine) { .enlace-btn:hover { text-decoration: underline; text-underline-offset: 3px; } }
+.enlace { color: var(--foco); font-weight: 600; text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .enlace:hover { text-decoration: underline; text-underline-offset: 3px; } }
+
+/* botones */
+.btn { height: 50px; padding: 0 20px; border-radius: 16px; border: 0; background: var(--primario); color: var(--primario-tinta); font-weight: 600; font-size: 16px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: transform 140ms var(--ease-out), opacity 140ms ease; }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn.ancho { width: 100%; }
+.btn.sec { background: var(--relleno); color: var(--tinta); }
+.btn.peq-btn { height: 40px; font-size: 14px; padding: 0 14px; border-radius: 12px; }
+.btn:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) { .btn:hover { opacity: .9; } }
+
+/* chips */
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px; scroll-padding-inline: 16px; }
+@media (min-width: 960px) { .chips { margin-inline: 0; padding-inline: 0; flex-wrap: wrap; overflow: visible; } }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; height: 38px; padding: 0 14px; border-radius: 19px; border: 0; background: var(--tarjeta); box-shadow: var(--sombra-1), inset 0 0 0 1px var(--linea);
+  font-size: 14px; font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; transition: transform 120ms var(--ease-out), background-color 150ms ease; }
+.chip[aria-pressed="true"] { background: var(--primario); color: var(--primario-tinta); box-shadow: none; }
+.chip:active { transform: scale(.96); }
+.chip .cuenta { opacity: .55; font-weight: 500; font-variant-numeric: tabular-nums; }
+.chip .foto { border-radius: 8px; }
+@media (hover: hover) and (pointer: fine) { .chip:not([aria-pressed="true"]):hover { background: var(--relleno); } }
+
+/* etiquetas */
+.tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.tag { font-size: 11.5px; font-weight: 600; border-radius: 7px; padding: 2px 7px; line-height: 1.3; white-space: nowrap; }
+.tag.sano { color: var(--sano); background: var(--sano-fondo); }
+.tag.cheque { color: var(--cheque); background: var(--cheque-fondo); }
+.tag.neutra { color: var(--tinta-2); background: var(--relleno); }
+.tag.oferta { color: #fff; background: var(--oferta); }
+.tag.ultra { color: var(--cheque); background: var(--cheque-fondo); }
+.tag.aviso-tag { color: var(--cheque); background: var(--cheque-fondo); }
+/* nivel de naturalidad: cinco barras, como un medidor */
+.nivel { display: inline-flex; gap: 3px; align-items: center; }
+.nivel i { width: 14px; height: 6px; border-radius: 3px; background: var(--relleno); }
+.nivel i.on { background: var(--sano); }
+.nivel.bajo i.on { background: var(--cheque); }
+.natural { padding: 14px 16px; display: grid; gap: 8px; }
+.natural .cab-nat { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.natural .ingr { font-size: 13px; color: var(--tinta-2); line-height: 1.45; }
+.natural mark { background: var(--cheque-fondo); color: var(--cheque); border-radius: 4px; padding: 0 2px; }
+.criterio { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; color: var(--tinta-2); }
+.criterio b { color: var(--tinta); }
+.escenarios { list-style: none; margin: 0; padding: 0 16px; }
+.escenarios li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 11px 0; border-top: 1px solid var(--linea); font-size: 14px; }
+.escenarios li:first-child { border-top: 0; }
+.escenarios .cifra { font: 700 17px/1 var(--display); font-variant-numeric: tabular-nums; }
+.escenarios .mejor .cifra { background: var(--etiqueta); color: var(--etiqueta-tinta); padding: 5px 8px; border-radius: 8px; }
+.escenarios button { all: unset; cursor: pointer; display: contents; }
+
+/* selector de cantidad: + que se abre a − 1 + */
+.cantidad { display: inline-flex; align-items: center; height: 40px; border-radius: 20px; background: var(--primario); color: var(--primario-tinta);
+  box-shadow: var(--sombra-2); overflow: hidden; }
+.cantidad button { width: 40px; height: 40px; border: 0; background: none; color: inherit; display: grid; place-items: center; transition: transform 120ms var(--ease-out); }
+.cantidad button:active { transform: scale(.88); }
+.cantidad button svg { width: 18px; height: 18px; }
+.cantidad output { min-width: 18px; text-align: center; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; }
+.cantidad.sola { width: 40px; }
+.cantidad.abierta { animation: abrirCantidad 200ms var(--ease-out); }
+@keyframes abrirCantidad { from { transform: scale(.85); opacity: .6; } }
+
+/* ---------- inicio ---------- */
+.super-fila { display: flex; gap: 10px; align-items: center; }
+.super-fila .logo { box-shadow: var(--sombra-1), 0 0 0 1px rgba(22, 27, 51, .06); }
+.rejilla-sec { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 560px) { .rejilla-sec { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.sec-tile { border: 0; text-align: left; padding: 14px; border-radius: var(--r-tarjeta); background: var(--tarjeta); box-shadow: var(--sombra-1);
+  display: grid; gap: 10px; align-content: space-between; min-height: 132px; transition: transform 140ms var(--ease-out), box-shadow 200ms ease; }
+.sec-tile:active { transform: scale(.97); }
+@media (hover: hover) and (pointer: fine) { .sec-tile:hover { box-shadow: var(--sombra-2); } }
+.sec-tile b { font: 700 16px/1.2 var(--display); }
+.sec-tile .peq { margin-top: 2px; }
+.collage { display: flex; }
+.collage .foto { width: 46px; height: 46px; border-radius: 12px; box-shadow: 0 0 0 2px var(--tarjeta); }
+.collage .foto + .foto { margin-left: -10px; }
+
+/* ---------- búsqueda ---------- */
+.comp { padding: 18px; display: grid; gap: 14px; }
+.comp-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.comp-cab .h2 { font-size: 22px; }
+.ganador { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: center; background: var(--etiqueta); color: var(--etiqueta-tinta);
+  border-radius: 18px; padding: 12px; border: 0; text-align: left; width: 100%; position: relative; transition: transform 140ms var(--ease-out); }
+.ganador:active { transform: scale(.985); }
+.ganador .foto { width: 76px; height: 76px; }
+.ganador .precio { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.ganador .pu-gan { font: 600 14px/1 var(--texto); letter-spacing: 0; opacity: .8; margin-left: 4px; }
+.rival .dif { color: var(--oferta); font-weight: 600; }
+.ganador .n { font-size: 14px; opacity: .85; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.ganador .sello { position: absolute; top: 10px; right: 12px; font-size: 11px; font-weight: 700; letter-spacing: .02em; background: var(--etiqueta-tinta); color: var(--etiqueta);
+  padding: 3px 8px; border-radius: 999px; }
+.ganador .tag { background: rgba(255, 255, 255, .6); color: var(--etiqueta-tinta); }
+.rivales { list-style: none; margin: 0; padding: 0; display: grid; }
+.rival { border: 0; background: none; width: 100%; text-align: left; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 10px 2px; border-top: 1px solid var(--linea); border-radius: 0; }
+.rival .n { font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.rival .pu { text-align: right; font: 700 16px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.rival .pu small { display: block; font: 500 12px/1.3 var(--texto); color: var(--tinta-2); }
+.rival .dif { color: var(--oferta); }
+@media (hover: hover) and (pointer: fine) { .rival:hover .n { text-decoration: underline; text-underline-offset: 3px; } }
+.intencion { display: grid; gap: 8px; margin-top: 14px; }
+.barra-res { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.barra-res select { height: 38px; border-radius: 12px; border: 0; background: var(--tarjeta); color: var(--tinta); box-shadow: var(--sombra-1), inset 0 0 0 1px var(--linea); padding: 0 12px; font-size: 14px; font-weight: 600; }
+
+/* tarjetas de producto */
+.rejilla-prod { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
+@media (min-width: 600px) { .rejilla-prod { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.pcard { position: relative; background: var(--tarjeta); border-radius: var(--r-tarjeta); box-shadow: var(--sombra-1); padding: 10px 10px 12px;
+  display: grid; grid-template-rows: auto auto 1fr; gap: 8px; content-visibility: auto; contain-intrinsic-size: 260px; min-width: 0; }
+.pcard .abrir { all: unset; cursor: pointer; display: grid; gap: 8px; border-radius: 14px; min-width: 0; }
+.pcard .abrir:focus-visible { outline: 2.5px solid var(--foco); outline-offset: 2px; }
+.pcard .imagen { position: relative; background: #fff; border-radius: 14px; display: grid; place-items: center; aspect-ratio: 1 / 1; max-width: 100%; overflow: hidden; }
+.pcard .imagen .logo { position: absolute; top: 6px; left: 6px; }
+.pcard .precio { font: 800 19px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.pcard .precio s { font: 500 13px var(--texto); color: var(--tinta-3); }
+.pcard .pu { font-size: 12.5px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.pcard .n { font-size: 14px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 2.6em; }
+.pcard { container-type: inline-size; }
+.pcard .accion { position: absolute; right: 16px; top: calc(100cqw - 56px); z-index: 1; }
+@media (hover: hover) and (pointer: fine) { .pcard { transition: box-shadow 200ms ease; } .pcard:hover { box-shadow: var(--sombra-2); } }
+
+/* filas de producto (listas, ficha, categorías) */
+.filas { list-style: none; margin: 0; padding: 0 14px; }
+.fila { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linea); }
+.fila:first-child { border-top: 0; }
+.fila .abrir { all: unset; cursor: pointer; display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 12px; align-items: center; min-width: 0; border-radius: 12px; }
+.fila .abrir:focus-visible { outline: 2.5px solid var(--foco); outline-offset: 2px; }
+.fila .info { min-width: 0; display: grid; gap: 3px; }
+.fila .n { font-size: 15px; font-weight: 500; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fila .meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--tinta-2); }
+.fila .pu { text-align: right; font: 700 16px/1.15 var(--display); font-variant-numeric: tabular-nums; }
+.fila .pu small { display: block; font: 500 12px/1.3 var(--texto); color: var(--tinta-2); }
+.fila.hecho .n { text-decoration: line-through; color: var(--tinta-3); }
+.fila.sin-accion { grid-template-columns: minmax(0, 1fr); }
+@media (hover: hover) and (pointer: fine) { .fila .abrir:hover .n { text-decoration: underline; text-underline-offset: 3px; } }
+.check { width: 44px; height: 44px; border: 0; background: none; display: grid; place-items: center; flex: none; margin-left: -8px; }
+.check span { width: 26px; height: 26px; border-radius: 13px; border: 2px solid var(--tinta-3); display: grid; place-items: center; transition: background-color 150ms ease, border-color 150ms ease; }
+.check span svg { width: 15px; height: 15px; }
+.check[aria-pressed="true"] span { background: var(--sano); border-color: var(--sano); color: #fff; }
+
+/* ---------- comprar ---------- */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--relleno); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg button { min-height: 38px; border: 0; border-radius: 9px; background: none; font-size: 14px; font-weight: 600; color: var(--tinta-2); padding: 4px 6px; line-height: 1.2;
+  transition: background-color 160ms ease, color 160ms ease; }
+.seg button[aria-pressed="true"] { background: var(--tarjeta); color: var(--tinta); box-shadow: var(--sombra-1); }
+.logos-sel { display: flex; gap: 10px; flex-wrap: wrap; }
+.logo-sel { border: 0; background: var(--tarjeta); border-radius: 16px; padding: 8px 12px 8px 8px; display: inline-flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px;
+  box-shadow: var(--sombra-1), inset 0 0 0 1px var(--linea); transition: transform 120ms var(--ease-out), opacity 150ms ease; }
+.logo-sel[aria-pressed="true"] { box-shadow: var(--sombra-1), inset 0 0 0 2px var(--primario); }
+.logo-sel[aria-pressed="false"] { opacity: .5; }
+.logo-sel[aria-pressed="false"] .logo { filter: grayscale(1); }
+.logo-sel:active { transform: scale(.96); }
+.logo-sel[disabled] { cursor: default; }
+.total { padding: 18px; display: grid; gap: 6px; }
+.total .cifra { font: 800 44px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+.etq svg { width: 16px; height: 16px; flex: none; }
+.total .etq { justify-self: start; }
+.etq { display: inline-flex; align-items: center; gap: 6px; background: var(--etiqueta); color: var(--etiqueta-tinta); font-weight: 600; font-size: 14px;
+  padding: 6px 12px; border-radius: 10px; justify-self: start; }
+.aviso { color: var(--oferta); font-weight: 600; }
+.aviso-plan { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--relleno); border-radius: 12px; padding: 8px 8px 8px 12px; font-size: 14px; font-weight: 600; }
+.grupo { padding: 6px 16px 4px; }
+.grupo-cab { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; }
+.grupo-cab .subtotal { font: 800 20px/1 var(--display); font-variant-numeric: tabular-nums; }
+.linea { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linea); font-size: 14px; }
+.linea .eq { color: var(--tinta-2); font-size: 12.5px; }
+.llenar { display: grid; gap: 8px; padding: 12px 0; border-top: 1px solid var(--linea); }
+.llenar .btn svg { width: 20px; height: 20px; }
+.grupo-pie { display: flex; gap: 18px; flex-wrap: wrap; padding: 6px 0 10px; border-top: 1px solid var(--linea); }
+.web-lista { padding-bottom: 12px; display: grid; gap: 8px; }
+.web-lista ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.ranking { list-style: none; margin: 0; padding: 0 16px; }
+.ranking li { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--linea); }
+.ranking li:first-child { border-top: 0; }
+.ranking .cifra { font: 700 18px/1 var(--display); font-variant-numeric: tabular-nums; }
+.ranking .mejor .cifra { background: var(--etiqueta); color: var(--etiqueta-tinta); padding: 6px 8px; border-radius: 8px; }
+
+/* ---------- ajustes (lista agrupada iOS) ---------- */
+.grupo-ios { padding: 0 16px; }
+.ajuste { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid var(--linea); }
+.ajuste:first-child { border-top: 0; }
+.ajuste-tit { font-weight: 600; font-size: 16px; display: flex; gap: 10px; align-items: center; }
+.ajuste .peq { margin-top: 3px; }
+.switch { position: relative; width: 51px; height: 31px; border-radius: 16px; border: 0; background: var(--relleno); flex: none; transition: background-color 180ms ease; }
+.switch span { position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 14px; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, .2);
+  transition: transform 220ms var(--ease-out); }
+.switch[aria-checked="true"] { background: #34C759; }
+.switch[aria-checked="true"] span { transform: translateX(20px); }
+.campos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; padding: 0 0 14px; }
+.campo { display: grid; gap: 5px; font-size: 13px; color: var(--tinta-2); }
+.euro { display: flex; align-items: center; gap: 6px; color: var(--tinta); font-weight: 600; }
+.euro input { width: 100%; min-width: 0; height: 42px; border-radius: 12px; border: 0; background: var(--relleno); padding: 0 12px; font-size: 16px; }
+
+/* ---------- vacíos, carga ---------- */
+.vacio { text-align: center; padding: 48px 12px; display: grid; gap: 12px; justify-items: center; }
+.vacio p { max-width: 34ch; color: var(--tinta-2); }
+.vacio .icono-grande { width: 64px; height: 64px; border-radius: 20px; background: var(--tarjeta); display: grid; place-items: center; box-shadow: var(--sombra-1); }
+.vacio .icono-grande svg { width: 30px; height: 30px; color: var(--tinta-2); }
+.esq { border-radius: var(--r-tarjeta); background: linear-gradient(90deg, var(--relleno), var(--tarjeta), var(--relleno)); background-size: 200% 100%; animation: brillo 1.2s ease-in-out infinite; }
+@keyframes brillo { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+/* ---------- navegación ---------- */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--vidrio); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--linea); padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.tabbar-in { max-width: 680px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); height: var(--barra); }
+.tab { border: 0; background: none; display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 11px; font-weight: 600; color: var(--tinta-3); position: relative; }
+.tab svg { width: 25px; height: 25px; }
+.tab[aria-current="page"] { color: var(--tinta); }
+.badge { position: absolute; top: 4px; left: calc(50% + 6px); min-width: 19px; height: 19px; border-radius: 10px; background: var(--etiqueta); color: var(--etiqueta-tinta);
+  font-size: 11px; font-weight: 800; display: grid; place-items: center; padding: 0 5px; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--fondo); }
+.marca-lat { display: flex; gap: 10px; align-items: center; padding: 0 10px 18px; }
+.marca-lat b { font: 800 19px/1.1 var(--display); letter-spacing: -.01em; }
+.marca-icono { width: 36px; height: 36px; border-radius: 11px; background: var(--etiqueta); color: var(--etiqueta-tinta); display: grid; place-items: center; flex: none; }
+.marca-icono svg { width: 20px; height: 20px; }
+.nav-lat { border: 0; background: none; display: flex; align-items: center; gap: 12px; height: 46px; padding: 0 12px; border-radius: 12px; font-weight: 600; color: var(--tinta-2);
+  text-align: left; position: relative; transition: background-color 150ms ease; }
+.nav-lat svg { width: 22px; height: 22px; }
+.nav-lat[aria-current="page"] { background: var(--tarjeta); color: var(--tinta); box-shadow: var(--sombra-1); }
+@media (hover: hover) and (pointer: fine) { .nav-lat:not([aria-current="page"]):hover { background: var(--relleno); } }
+.nav-lat .badge { position: static; margin-left: auto; box-shadow: none; }
+.lateral .pie { margin-top: auto; display: grid; gap: 10px; padding: 0 10px; }
+
+/* barra flotante con tu compra (móvil) */
+.barra-compra { position: fixed; left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+  bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + 10px); z-index: 24; max-width: 656px; margin: 0 auto;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; border: 0; text-align: left;
+  background: var(--primario); color: var(--primario-tinta); border-radius: 20px; padding: 10px 12px 10px 10px; box-shadow: var(--sombra-3);
+  animation: subeBarra 260ms var(--ease-out); transition: transform 140ms var(--ease-out); }
+.barra-compra:active { transform: scale(.985); }
+.barra-compra .bolsa { width: 42px; height: 42px; border-radius: 13px; background: var(--etiqueta); color: var(--etiqueta-tinta); display: grid; place-items: center;
+  font: 800 16px/1 var(--display); font-variant-numeric: tabular-nums; }
+.barra-compra .t1 { font-weight: 700; font-size: 15px; }
+.barra-compra .t2 { font-size: 12.5px; opacity: .75; display: flex; gap: 6px; align-items: center; }
+.barra-compra .t2 .logo { box-shadow: none; }
+.barra-compra .ir { display: flex; align-items: center; gap: 4px; font-weight: 700; font-size: 15px; }
+.barra-compra .ir svg { width: 18px; height: 18px; }
+@keyframes subeBarra { from { transform: translateY(16px); opacity: 0; } }
+
+/* panel «Tu compra» (escritorio) */
+.panel-in { background: var(--tarjeta); border-radius: var(--r-tarjeta); box-shadow: var(--sombra-1); padding: 18px; display: grid; gap: 14px; }
+.panel .filas { padding: 0; }
+.panel .fila .abrir { grid-template-columns: 44px minmax(0, 1fr); }
+
+/* hoja (móvil) y diálogo (escritorio) */
+.velo { position: fixed; inset: 0; z-index: 40; background: rgba(10, 12, 26, .45); animation: aparece 240ms var(--ease-out); }
+.hoja { position: fixed; left: 0; right: 0; bottom: 0; z-index: 41; max-height: 90%; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--fondo); border-radius: 24px 24px 0 0; animation: sube 340ms var(--ease-sheet);
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+@media (min-width: 960px) {
+  .hoja { left: 50%; right: auto; bottom: auto; top: 50%; width: min(560px, calc(100% - 48px)); max-height: 86vh; border-radius: 24px;
+    transform: translate(-50%, -50%); animation: aparece-centro 260ms var(--ease-out); padding: 20px 24px 24px; }
+  .asa { display: none; }
+}
+.hoja-in { display: grid; gap: 16px; }
+.asa { width: 38px; height: 5px; border-radius: 3px; background: var(--tinta-3); opacity: .45; margin: 2px auto 2px; }
+.det-foto { background: #fff; border-radius: 20px; display: grid; place-items: center; padding: 14px; position: relative; }
+.det-foto .logo { position: absolute; top: 12px; left: 12px; }
+.cerrar { position: absolute; right: 12px; top: 12px; width: 36px; height: 36px; border-radius: 18px; border: 0; background: var(--relleno); color: var(--tinta-2); display: grid; place-items: center; z-index: 2; }
+.cerrar svg { width: 18px; height: 18px; }
+.precio-grande { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.precio-grande b { font: 800 34px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+
+/* aviso emergente */
+.toast { position: fixed; left: 50%; bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + 84px); z-index: 50; transform: translateX(-50%);
+  background: var(--primario); color: var(--primario-tinta); padding: 8px 8px 8px 16px; border-radius: 14px; font-size: 14px; font-weight: 500;
+  box-shadow: var(--sombra-3); animation: toast 220ms var(--ease-out); max-width: calc(100% - 32px); display: flex; gap: 12px; align-items: center; min-height: 44px; }
+.toast.sin-barra { bottom: calc(var(--barra) + env(safe-area-inset-bottom, 0px) + 14px); }
+.toast button { border: 0; background: none; color: var(--etiqueta); font-weight: 700; padding: 0 8px; min-height: 36px; }
+@media (min-width: 960px) { .toast, .toast.sin-barra { bottom: 28px; } }
+@keyframes aparece { from { opacity: 0; } }
+@keyframes aparece-centro { from { opacity: 0; transform: translate(-50%, -48%) scale(.98); } }
+@keyframes sube { from { transform: translateY(100%); } }
+@keyframes toast { from { transform: translate(-50%, 10px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .velo, .hoja, .toast, .esq, .barra-compra, .cantidad.abierta { animation: none; }
+  .btn, .chip, .sec-tile, .switch, .switch span, .logo-sel, .ganador, .cantidad button, .seg button, .check span, .barra-compra { transition: none; }
+}
+</style>
+
+<div id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+const { useState, useEffect, useMemo, useRef, useCallback, useDeferredValue, memo } = React;
+const html = htm.bind(React.createElement);
+/* ------------------------------------------------------------------ utilidades */
+const CONECTORES = new Set(["de","del","la","el","los","las","con","en","y","al","a","para","o","e","su"]);
+const eur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+const fmt = v => v == null ? "—" : eur.format(v);
+const norm = t => (t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+const stem = w => {
+  if (w.length > 4 && w.endsWith("ones")) w = w.slice(0, -2);
+  else if (w.length > 3 && w.endsWith("s") && !w.endsWith("ss")) w = w.slice(0, -1);
+  if (w.length > 4 && (w.endsWith("a") || w.endsWith("o"))) w = w.slice(0, -1);
+  return w;
+};
+const tokens = q => norm(q).split(" ").filter(w => w && !CONECTORES.has(w)).map(stem);
+// sinónimos: «leche de almendras» es como las tiendas llaman a la «bebida de almendras»
+const VEGETAL = /^(almendr|aven|soj|arroz|coc|avellan|chuf|nuez|nuec|espelt|anacard|guisant|quino|cañam|canam)/;
+const SINONIMOS = { zum: ["jug"], jug: ["zum"], yogurt: ["yogur"], aguacat: ["palt"] };
+function consulta(q) {
+  const t = tokens(q);
+  const vegetal = t.some(w => VEGETAL.test(w));
+  return t.map(w => w === "leche" && vegetal ? ["leche", "bebid"] : [w, ...(SINONIMOS[w] || [])]);
+}
+const empieza = (o, alts) => o && alts.some(a => o.startsWith(a));
+// la misma palabra (las raíces ya quitan plural y género: «limones» = «limón»), no otra que empieza igual («limonada», «salsa»)
+const igual = (o, alts) => o && alts.some(a => o === a);
+const leer = (k, def) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } };
+const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const UNID = ["kg", "L", "ud", "docena", "lavado"];
+const fmtU = (v, u) => v == null || u == null ? "" : `${eur.format(v)}/${UNID[u]}`;
+// accesos rápidos: [texto, categoría a la que llevan] (la categoría evita ambigüedades: «Patatas» frescas, no de bolsa)
+const BASICOS = [["Leche entera", "l_leche"], ["Huevos medianos", "l_huevos"], ["Pan de molde", "pa_molde"],
+  ["Jamón serrano", "ch_jamon"], ["Pavo", "ch_pavo"], ["Pechuga de pollo", "c_pollo"], ["Aceite de oliva virgen extra", "d_aceite"],
+  ["Plátano", "fruta"], ["Patatas", "patata"], ["Tomate frito", "d_tomate"], ["Yogur natural", "l_yogur"], ["Arroz redondo", "d_arroz"],
+  ["Atún", "d_conserva_pescado"], ["Agua mineral", "b_agua"], ["Papel higiénico", "li_papel"], ["Detergente", "li_ropa"]];
+
+/* ------------------------------------------------------------------ catálogo */
+function preparar(d) {
+  const P = d.productos.map((r, i) => ({
+    i, s: r[0], id: r[1], n: r[2], b: r[3], p: r[4], a: r[5], up: r[6], u: r[7], q: r[8], sec: r[9], t: r[10], g: r[11],
+    foto: r[12], url: r[13] ? d.urls[r[0]] + r[13] : null, busca: r[14].split(" "), k: r[0] + ":" + r[1],
+    cat: r[15] ?? -1, gr: !!r[16], ch: r[17] || 0, pk: r[18] || 0, sa: r[19] || 0, mo: (d.motivos || [])[r[20]] || "",
+    ig: r[21] ? r[21].split(" ") : [],
+  }));
+  const cats = (d.categorias || []).map(([nombre, sec, clave], i) => ({ i, nombre, sec, clave, tipos: [], n: 0 }));
+  const T = d.tipos.map(([etq, sec, orden, vis, canon]) => {
+    const cl = canon ? canon.split(" ") : [];
+    return { etq, sec, orden: orden ? orden.split(" ") : [], vis: vis ? vis.split(" ") : [], prods: [], canon: new Set(cl), canonL: cl.filter(c => c[0] !== "#") };
+  });
+  const e = d.equivalencias || { frases: [], palabras: {}, ignorar: [] };
+  const eq = { frases: e.frases.map(([src, c]) => [new RegExp(src), c]), pal: e.palabras, ign: new Set(e.ignorar) };
+  const porClave = new Map(), porGrupo = new Map(), porTiendaSec = new Map();
+  for (const p of P) {
+    const ts = p.s * 100 + p.sec;
+    if (!porTiendaSec.has(ts)) porTiendaSec.set(ts, []);
+    porTiendaSec.get(ts).push(p);
+    T[p.t].prods.push(p);
+    porClave.set(p.k, p);
+    if (cats[p.cat]) cats[p.cat].n++;
+    if (p.g >= 0) { if (!porGrupo.has(p.g)) porGrupo.set(p.g, []); porGrupo.get(p.g).push(p); }
+  }
+  const tiposPorSec = d.secciones.map(() => []);
+  T.forEach((t, ti) => {
+    const tiendas = new Set(t.prods.map(p => p.s));
+    t.tiendas = tiendas.size;
+    const cc = new Map();
+    for (const p of t.prods) cc.set(p.cat, (cc.get(p.cat) || 0) + 1);
+    t.cat = [...cc.entries()].sort((a, b) => b[1] - a[1])[0][0];
+    if (tiendas.size >= 2) { tiposPorSec[t.sec].push(ti); if (cats[t.cat]) cats[t.cat].tipos.push(ti); }
+  });
+  const orden = (a, b) => T[b].tiendas - T[a].tiendas || T[b].prods.length - T[a].prods.length;
+  tiposPorSec.forEach(l => l.sort(orden));
+  cats.forEach(c => c.tipos.sort(orden));
+  const catsPorSec = d.secciones.map((_, s) => cats.filter(c => c.sec === s && c.n > 0));
+  return { ...d, P, T, cats, catsPorSec, porClave, porGrupo, porTiendaSec, tiposPorSec, eq };
+}
+
+/* ------------------------------------------------------------------ ajustes de la persona */
+// Gastos de envío por defecto (publicados en prensa; dependen de la zona, se pueden cambiar en Ajustes)
+const ENVIOS_DEF = [
+  { activo: true, coste: 8.2, umbral: null, costeSobre: 8.2, minimo: 50 },   // Mercadona: 8,20 €, pedido mínimo 50 €
+  { activo: true, coste: 7, umbral: 60, costeSobre: 4, minimo: 0 },          // Consum: 7 €, 4 € desde 60 €
+  { activo: true, coste: 4.99, umbral: 100, costeSobre: 0, minimo: 0 },      // DIA: 4,99 €, gratis desde 100 €
+  { activo: false, coste: 0, umbral: null, costeSobre: 0, minimo: 0 },       // LIDL no lleva la compra de alimentación a casa
+];
+const AJ_DEF = { saludable: false, socio: false, envios: ENVIOS_DEF };
+let AJ = AJ_DEF; // ajustes vigentes; App los fija en cada render a partir del estado guardado
+const mezclarAjustes = a => ({ ...AJ_DEF, ...(a || {}), envios: ENVIOS_DEF.map((e, i) => ({ ...e, ...(((a || {}).envios || [])[i] || {}) })) });
+const chequeDe = p => AJ.socio && p.s === 1 && p.ch ? p.ch : 0;
+const precioEf = p => Math.max(0, Math.round((p.p - chequeDe(p)) * 100) / 100);
+const upEf = p => p.up == null ? null : chequeDe(p) ? Math.round(p.up * precioEf(p) / p.p * 100) / 100 : p.up;
+// lo sano = lo natural: nivel 0-4 según sus ingredientes (ver «Cómo se decide» en Ajustes)
+const nivelDe = p => Math.min(4, Math.floor((p.sa || 0) / 10));
+const NIVELES = ["Ultraprocesado", "Con aditivos", "Poco procesado", "Sin aditivos", "Natural"];
+const sinDatos = p => p.mo === "Sin datos de ingredientes";
+// en modo saludable gana el más natural; a igualdad, el más barato por kg o L
+const mejorQue = (a, b) => AJ.saludable && a.sa !== b.sa ? a.sa > b.sa : (upEf(a) < upEf(b) || (upEf(a) === upEf(b) && precioEf(a) < precioEf(b)));
+
+/* búsqueda: como en las webs de los supermercados, pero agrupando por tipo de producto */
+/* equivalencias entre tiendas (tablas al final de scripts/categorias.py): «gulas» encuentra las «Delicias del mar de surimi» de Mercadona
+   y «ternera para guisar» los «Tacos de vacuno para guisar»; cada palabra se busca también por su sinónimo */
+function conceptosDe(C, texto) {
+  const n = norm(texto);
+  return C.eq.frases.filter(([rx]) => rx.test(n)).map(([, c]) => c);
+}
+function buscar(C, q) {
+  const qt = consulta(q).map(alts => {
+    const m = new Set(alts);
+    for (const a of alts) if (C.eq.pal[a]) m.add(C.eq.pal[a]);
+    return [...m];
+  });
+  if (!qt.length) return null;
+  const qc = conceptosDe(C, q);
+  const res = [];
+  for (const p of C.P) {
+    const T = C.T[p.t];
+    let ok = true;
+    for (const w of qt) { if (!p.busca.some(b => empieza(b, w)) && !T.canonL.some(c => empieza(c, w))) { ok = false; break; } }
+    const porConcepto = qc.length > 0 && qc.every(c => T.canon.has(c));
+    if (!ok && !porConcepto) continue;
+    const ot = T.orden;
+    const prefijo = qt.every((w, i) => igual(ot[i], w));
+    const contiene = prefijo || qt.every(w => ot.some(o => igual(o, w)) || T.canon.has(C.eq.pal[w[0]] || w[0]));
+    const extra = Math.max(0, ot.length - qt.length);
+    let nivel = prefijo ? (extra === 0 ? 0 : 1) : contiene ? 2 : 3;
+    if (porConcepto && nivel > 1) nivel = 1; // otro nombre para lo mismo: cuenta como «empieza así»
+    res.push({ p, nivel, extra, porConcepto });
+  }
+  return { qt, qc, res };
+}
+
+/* intención: ¿qué quiere decir quien busca «pavo»? Se puntúa cada categoría por cuántos productos
+   encajan y lo bien que encajan (el producto se llama así frente a solo mencionarlo) y en cuántos súper está. */
+// el tipo de producto se llama exactamente así (10), empieza así (5), lo contiene (1,5) o solo lo menciona el nombre (0,3)
+const PESO_NIVEL = [10, 5, 1.5, 0.3];
+// quien busca «salmón» o «pollo» casi nunca piensa en comida para gatos o en potitos, salvo que lo diga
+const PRIOR_SECCION = { "Mascotas": 0.08, "Bebé": 0.2, "Higiene y belleza": 0.5, "Carne": 1.3, "Pescado y marisco": 1.3, "Fruta y verdura": 1.3 };
+const PIDE_ESPECIAL = /^(perr|gat|mascot|cachorr|bebe|infantil|papill|potit|panal)/;
+function intencion(C, r) {
+  if (!r || !r.res.length) return [];
+  const especial = r.qt.some(w => PIDE_ESPECIAL.test(w[0]));
+  const m = new Map();
+  for (const x of r.res) {
+    if (x.p.cat < 0) continue;
+    if (!m.has(x.p.cat)) m.set(x.p.cat, { c: x.p.cat, puntos: 0, n: 0, tiendas: new Set(), tipos: new Map() });
+    const e = m.get(x.p.cat);
+    const t = e.tipos.get(x.p.t) || { w: 0, n: 0, nivel: x.nivel };
+    // el nombre empieza por lo buscado («Limones malla») pesa más que si solo lo es tras quitar la marca («Fanta de limón»)
+    const inicio = igual(stem(norm(x.p.n).split(" ")[0]), r.qt[0]);
+    const w = PESO_NIVEL[x.nivel] * (x.p.gr ? 0.3 : 1) * (x.nivel <= 1 ? (inicio ? 1.5 : 0.6) : 1);
+    t.w = Math.max(t.w, w); t.n++; t.nivel = Math.min(t.nivel, x.nivel);
+    e.tipos.set(x.p.t, t);
+    e.n++; e.tiendas.add(x.p.s);
+  }
+  // cuenta tipos de producto, no envases: veinte refrescos de limón no pesan más que «Limón» la fruta
+  // lo que solo empieza así («patatas fritas lisas») o lo menciona («refresco de limón») suma con rendimientos decrecientes
+  for (const e of m.values()) {
+    let empiezan = 0, menciones = 0;
+    for (const t of e.tipos.values()) {
+      const v = t.w * (1 + Math.log2(t.n));
+      if (t.nivel === 0) e.puntos += v; else if (t.nivel === 1) empiezan += v; else menciones += v;
+    }
+    e.puntos += 6 * Math.sqrt(empiezan) + 3 * Math.sqrt(menciones);
+  }
+  const prior = c => { const f = PRIOR_SECCION[C.secciones[C.cats[c].sec]] || 1; return especial && f < 1 ? 1 : f; };
+  const lista = [...m.values()].map(e => ({ ...e, puntos: e.puntos * (0.4 + 0.15 * e.tiendas.size) * prior(e.c) }))
+    .sort((a, b) => b.puntos - a.puntos);
+  const total = lista.reduce((a, e) => a + e.puntos, 0) || 1;
+  return lista.filter((e, i) => i === 0 || (e.puntos / total >= 0.04 && e.n >= 2)).slice(0, 8);
+}
+
+function comparar(C, r, q, opciones = {}) {
+  if (!r) return null;
+  const { qt, res } = r;
+  const catPieza = opciones.cat >= 0 && C.cats[opciones.cat] && C.cats[opciones.cat].clave === "ch_pieza";
+  const vale = x => x.p.up != null && (opciones.grandes || catPieza || !x.p.gr);
+  // núcleo: productos cuyo tipo empieza por lo buscado; si no hay, los que contienen todas las palabras
+  let nucleo = res.filter(x => x.nivel <= 1 && vale(x));
+  if (new Set(nucleo.map(x => x.p.s)).size < 2) nucleo = res.filter(x => x.nivel <= 2 && vale(x));
+  if (!nucleo.length) return null; // búsqueda de marca: no hay un tipo de producto que comparar
+  const ocultos = catPieza || opciones.grandes ? 0 : res.filter(x => x.nivel <= 2 && x.p.gr && x.p.up != null).length;
+  // unidad y sección dominantes: la combinación presente en más supermercados
+  const combos = new Map();
+  for (const x of nucleo) {
+    const k = x.p.u + "|" + x.p.sec;
+    if (!combos.has(k)) combos.set(k, { n: 0, tiendas: new Set() });
+    const c = combos.get(k); c.n++; c.tiendas.add(x.p.s);
+  }
+  const [clave] = [...combos.entries()].sort((a, b) => b[1].tiendas.size - a[1].tiendas.size || b[1].n - a[1].n)[0];
+  const [u, sec] = clave.split("|").map(Number);
+  nucleo = nucleo.filter(x => x.p.u === u && x.p.sec === sec);
+  if (new Set(nucleo.map(x => x.p.s)).size < 2) return { solo: true, ocultos };
+  const filas = [];
+  for (let s = 0; s < C.tiendas.length; s++) {
+    const enTienda = res.filter(x => x.p.s === s && vale(x) && x.p.u === u && x.p.sec === sec);
+    let cand = enTienda.filter(x => x.nivel <= 1), aprox = false;
+    if (!cand.length) cand = enTienda.filter(x => x.nivel <= 2);
+    if (!cand.length) { cand = enTienda; aprox = true; }
+    if (!cand.length) continue;
+    const mejor = cand.reduce((a, b) => mejorQue(b.p, a.p) ? b : a).p;
+    filas.push({ s, p: mejor, aprox, n: cand.length });
+  }
+  filas.sort((a, b) => (AJ.saludable ? b.p.sa - a.p.sa : 0) || upEf(a.p) - upEf(b.p));
+  // afinar: la siguiente palabra del tipo de producto (entera, semidesnatada, sin lactosa…)
+  const sig = new Map();
+  for (const x of nucleo) {
+    if (x.nivel > 1) continue;
+    const vis = C.T[x.p.t].vis;
+    let w = vis[qt.length];
+    if (w === "sin" && vis[qt.length + 1]) w = w + " " + vis[qt.length + 1]; // «sin lactosa», no «sin»
+    if (w && w.length > 1 && !/^\d/.test(w)) sig.set(w, (sig.get(w) || 0) + 1);
+  }
+  const refinar = [...sig.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([w]) => w);
+  const exacto = nucleo.find(x => x.nivel === 0);
+  const texto = (q || "").trim();
+  const titulo = exacto ? C.T[exacto.p.t].etq : texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase();
+  return { u, filas, refinar, titulo, total: nucleo.length, ocultos };
+}
+
+/* ------------------------------------------------------------------ equivalencias para la lista */
+const masa = u => u === 0 || u === 1;
+// unidades y docenas se pueden comparar: 1 docena = 12 unidades
+const piezas = u => u === 2 || u === 3;
+const enBase = p => p.q == null ? null : p.u === 3 ? p.q * 12 : p.q;
+// sin unidad conocida (p. ej. «Huevos» sin formato) se compara envase a envase
+const comparables = (a, b) => a == null || b == null || a === b || (masa(a) && masa(b)) || (piezas(a) && piezas(b));
+const CALIFICATIVOS = new Set(["ecologic", "ecologico", "bio", "eco", "granel", "malla", "bolsa", "suelt", "seleccion", "premium", "gourmet"]);
+function precioDeN(c, n) {
+  // oferta pack de Consum («8 latas a 0,98 €/ud») y Cheque Crece del socio
+  let total = n * c.p;
+  if (c.pk && n >= c.pk[0]) { const packs = Math.floor(n / c.pk[0]) * c.pk[0]; total = packs * c.pk[1] + (n - packs) * c.p; }
+  return Math.round((total - n * chequeDe(c)) * 100) / 100;
+}
+function costeCon(c, ref, cant) {
+  let n = cant;
+  if (ref.q && c.q && comparables(ref.u, c.u)) n = Math.max(1, Math.ceil(enBase(ref) * cant / enBase(c) - 0.03));
+  return { p: c, n, coste: precioDeN(c, n) };
+}
+/* Nunca se cambia lo que elegiste por algo menos natural: primero se busca entre lo igual o más natural que tu
+   producto (según sus ingredientes) y solo si no hay ninguno se acepta uno menos natural, avisando. */
+let ESTRICTO = false;
+function naturalComoRef(ref, lista) {
+  if (!ESTRICTO || sinDatos(ref)) return lista;
+  // más natural, o igual de natural sin perder lo que lo distingue (% de carne, ecológico, integral…)
+  const n = nivelDe(ref), extra = ref.sa % 10;
+  return lista.filter(c => !sinDatos(c) && (nivelDe(c) > n || (nivelDe(c) === n && c.sa % 10 >= extra)));
+}
+function equivalente(C, ref, s, cant) {
+  if (ref.s === s || ref.g >= 0) { const r = equivalenteDe(C, ref, s, cant); if (r && r.como === "igual") return r; }
+  ESTRICTO = true;
+  let r = equivalenteDe(C, ref, s, cant);
+  ESTRICTO = false;
+  if (r) return r;
+  r = equivalenteDe(C, ref, s, cant);
+  if (r && !sinDatos(ref) && (sinDatos(r.p) || r.p.sa < ref.sa - (ref.sa % 10) || (nivelDe(r.p) === nivelDe(ref) && r.p.sa % 10 < ref.sa % 10))) r = { ...r, menosNatural: true };
+  return r;
+}
+function equivalenteDe(C, ref, s, cant) {
+  if (ref.s === s) return { p: ref, n: cant, coste: precioDeN(ref, cant), como: "igual" };
+  if (ref.g >= 0) {
+    const m = (C.porGrupo.get(ref.g) || []).find(p => p.s === s);
+    if (m) return { ...costeCon(m, ref, cant), como: "igual" };
+  }
+  const elegir = (lista, como) => {
+    lista = naturalComoRef(ref, lista);
+    if (!lista.length) return null;
+    if (AJ.saludable) { const m = Math.max(...lista.map(c => c.sa)); lista = lista.filter(c => c.sa === m); }
+    let mejor = null;
+    for (const c of lista) { const r = costeCon(c, ref, cant); if (!mejor || r.coste < mejor.coste) mejor = r; }
+    return { ...mejor, como };
+  };
+  // nunca se cambia una compra normal por una pieza entera o un formato de hostelería
+  const tamano = p => ref.gr || !p.gr;
+  const compatible = p => comparables(p.u, ref.u) && tamano(p);
+  const mismoTipo = C.T[ref.t].prods.filter(p => p.s === s && compatible(p));
+  const r1 = elegir(mismoTipo, "tipo"); if (r1) return r1;
+  // el mismo producto con otro nombre en esa tienda (gulas = delicias del mar de surimi; ternera de guisar = añojo para guisar)
+  const re = elegirParecido(C, ref, equivalentesEn(C, ref, s).filter(compatible), cant, "equivalente", 0, 0.03); if (re) return re;
+  const ot = C.T[ref.t].orden;
+  if (!ot.length) return null;
+  const enSec = C.porTiendaSec.get(s * 100 + ref.sec) || [];
+  const enCat = enSec.filter(p => p.cat === ref.cat);
+  // parecido: el tipo empieza igual (probando con menos palabras, mínimo dos);
+  // «ecológico», «granel», «bio»… no cambian el producto, así que se prueban también sin ellos
+  const base = ot.filter(w => !CALIFICATIVOS.has(w));
+  const intentos = [];
+  for (let n = ot.length; n >= Math.min(2, ot.length); n--) intentos.push(ot.slice(0, n));
+  if (base.length && base.length < ot.length) intentos.push(base);
+  for (const candidatos of [enCat, enSec]) {
+    for (const pref of intentos) {
+      const lista = [];
+      for (const p of candidatos) {
+        if (!compatible(p)) continue;
+        const o = C.T[p.t].orden;
+        if (pref.every((w, i) => o[i] === w)) lista.push(p);
+      }
+      const r = elegir(lista, "parecido"); if (r) return r;
+    }
+  }
+  // último recurso: todas las palabras del tipo aparecen en el nombre (marcas dentro del nombre: «Refresco Coca-Cola light»)
+  const lista = enSec.filter(p => compatible(p) && ot.every(w => p.busca.includes(w)));
+  const r3 = elegir(lista, "parecido"); if (r3) return r3;
+  return sustituto(C, ref, s, cant, enSec, compatible);
+}
+/* equivalentes: comparten un concepto (#gula, #vacuno_guisar…) o, quitando calificativos («gallega», «IGP»,
+   «selección»…) y unificando sinónimos («añojo» = «ternera» = «vacuno»), se llaman igual */
+const clavePalabras = (C, T) => T.canonL.filter(w => !C.eq.ign.has(w)).sort().join(" ");
+function equivalentesEn(C, ref, s) {
+  const T = C.T[ref.t];
+  if (!C.porConcepto) {
+    C.porConcepto = new Map(); C.porPalabras = new Map();
+    for (const p of C.P) {
+      for (const c of C.T[p.t].canon) if (c[0] === "#") { if (!C.porConcepto.has(c)) C.porConcepto.set(c, []); C.porConcepto.get(c).push(p); }
+      const k = clavePalabras(C, C.T[p.t]);
+      if (k) { if (!C.porPalabras.has(k)) C.porPalabras.set(k, []); C.porPalabras.get(k).push(p); }
+    }
+  }
+  const out = new Set();
+  for (const c of T.canon) if (c[0] === "#") for (const p of C.porConcepto.get(c) || []) if (p.s === s) out.add(p);
+  const k = clavePalabras(C, T);
+  if (k) for (const p of C.porPalabras.get(k) || []) if (p.s === s && p.sec === ref.sec) out.add(p);
+  return [...out];
+}
+/* parecido entre dos productos (0 a ~3): conceptos y palabras canónicas en común, misma palabra principal,
+   mismos primeros ingredientes y misma categoría */
+function parecido(C, a, b) {
+  const A = C.T[a.t], B = C.T[b.t];
+  const pa = [...A.canon].filter(w => !C.eq.ign.has(w)), pb = new Set([...B.canon].filter(w => !C.eq.ign.has(w)));
+  let comun = 0, total = 0;
+  for (const w of new Set([...pa, ...pb])) { const peso = w[0] === "#" ? 2 : 1; total += peso; if (pb.has(w) && pa.includes(w)) comun += peso; }
+  let sim = total ? comun / total : 0;
+  const prim = o => o.map(w => C.eq.pal[w] || w).find(w => !C.eq.ign.has(w));
+  if (A.orden.length && B.orden.length && prim(A.orden) === prim(B.orden)) sim += 0.5;
+  if (a.ig.length && b.ig.length) {
+    const I = new Set(a.ig); let c = 0;
+    for (const w of b.ig) if (I.has(w)) c++;
+    sim += 0.4 * c / (new Set([...a.ig, ...b.ig]).size || 1);
+  }
+  if (a.cat === b.cat && a.cat >= 0) sim += 0.15;
+  return sim;
+}
+/* entre los candidatos: los más parecidos; de ellos, con el modo sano, los más naturales; y de esos, el más barato */
+function elegirParecido(C, ref, lista, cant, como, minimo = 0, banda = 0.1) {
+  let cands = naturalComoRef(ref, lista).map(p => ({ p, sim: parecido(C, ref, p) })).filter(x => x.sim > minimo);
+  if (!cands.length) return null;
+  const max = Math.max(...cands.map(x => x.sim));
+  let top = cands.filter(x => x.sim >= max - banda).map(x => x.p);
+  if (AJ.saludable) { const m = Math.max(...top.map(c => c.sa)); top = top.filter(c => c.sa === m); }
+  let mejor = null;
+  for (const c of top) { const r = costeCon(c, ref, cant); if (!mejor || r.coste < mejor.coste) mejor = r; }
+  return { ...mejor, como, sim: max };
+}
+/* sin el mismo producto, otro nombre para lo mismo ni uno del mismo tipo: el más parecido de su categoría
+   (o de su sección), avisando */
+function sustituto(C, ref, s, cant, enSec, compatible) {
+  // de su categoría y con algo en común (las categorías de cada tienda no son perfectas)
+  // buscando algo igual de natural no vale cualquier cosa de la categoría: tiene que parecerse de verdad
+  const r = elegirParecido(C, ref, enSec.filter(p => p.cat === ref.cat && ref.cat >= 0 && compatible(p)), cant, "sustituto", ESTRICTO ? 0.5 : 0.15);
+  if (r) return r;
+  return elegirParecido(C, ref, enSec.filter(compatible), cant, "sustituto", 0.6);
+}
+
+function gastoEnvio(s, subtotal) {
+  const e = AJ.envios[s];
+  if (!e || !e.activo) return null;
+  return e.umbral && subtotal >= e.umbral ? e.costeSobre : e.coste;
+}
+const r2 = x => Math.round(x * 100) / 100;
+
+/* Reparte la lista entre supermercados. Con envío a domicilio cuenta los gastos de envío de cada súper usado,
+   sus umbrales de envío gratis o rebajado y sus pedidos mínimos, y mueve productos entre súper si sale a cuenta. */
+function planificar(C, items, activas, maxTiendas, envio) {
+  const vivos = items.map(it => ({ it, p: C.porClave.get(it.k) })).filter(x => x.p);
+  if (!vivos.length) return null;
+  const opciones = vivos.map(({ it, p }) => {
+    const por = {};
+    for (let s = 0; s < C.tiendas.length; s++) por[s] = equivalente(C, p, s, it.q);
+    return { it, p, por };
+  });
+  const evaluar = (conj, eleccion) => {
+    const sub = {};
+    let productos = 0, faltan = [];
+    eleccion.forEach((s, i) => {
+      if (s == null) { faltan.push(opciones[i]); return; }
+      const c = opciones[i].por[s].coste;
+      sub[s] = (sub[s] || 0) + c; productos += c;
+    });
+    let gastos = 0, penal = 0;
+    const envios = {}, cortos = [];
+    if (envio) for (const s of Object.keys(sub).map(Number)) {
+      const g = gastoEnvio(s, sub[s]);
+      envios[s] = g; gastos += g;
+      const min = AJ.envios[s].minimo || 0;
+      if (sub[s] < min) { cortos.push(s); penal += 1000 + (min - sub[s]); }
+    }
+    // los sustitutos cuentan un poco más para que solo se elijan si ahorran de verdad
+    let ajuste = 0;
+    eleccion.forEach((s, i) => { if (s != null && opciones[i].por[s].como === "sustituto") ajuste += 0.15 + 0.05 * opciones[i].por[s].coste; });
+    return { conj, eleccion, sub, productos: r2(productos), envios, gastos: r2(gastos), total: r2(productos + gastos), faltan, cortos,
+      coste: faltan.length * 1e5 + productos + gastos + penal + ajuste };
+  };
+  // búsqueda local desde varios puntos de partida: cada producto en su súper más barato y toda la compra en cada súper;
+  // mueve productos uno a uno y vacía súper enteros cuando ahorrar su envío compensa
+  const mejorar = (conj, eleccion) => {
+    let actual = evaluar(conj, eleccion);
+    for (let vuelta = 0; vuelta < 12; vuelta++) {
+      let mejoro = false;
+      for (let i = 0; i < opciones.length; i++) for (const s of conj) {
+        if (s === eleccion[i] || !opciones[i].por[s]) continue;
+        const prueba = eleccion.slice(); prueba[i] = s;
+        const r = evaluar(conj, prueba);
+        if (r.coste < actual.coste - 0.001) { eleccion = prueba; actual = r; mejoro = true; }
+      }
+      if (envio) for (const quitar of conj) {
+        if (!eleccion.includes(quitar)) continue;
+        const resto = conj.filter(s => s !== quitar);
+        if (!resto.length) continue;
+        const prueba = eleccion.map((s, i) => {
+          if (s !== quitar) return s;
+          let m = null, ms = null;
+          for (const t of resto) { const e = opciones[i].por[t]; if (e && (!m || e.coste < m.coste)) { m = e; ms = t; } }
+          return ms == null ? s : ms;
+        });
+        const r = evaluar(conj, prueba);
+        if (r.coste < actual.coste - 0.001) { eleccion = prueba; actual = r; mejoro = true; }
+      }
+      if (!mejoro) break;
+    }
+    return actual;
+  };
+  const resolver = conj => {
+    const voraz = opciones.map(o => {
+      let mejor = null, ms = null;
+      for (const s of conj) { const e = o.por[s]; if (e && (!mejor || e.coste < mejor.coste)) { mejor = e; ms = s; } }
+      return ms;
+    });
+    let actual = mejorar(conj, voraz);
+    if (conj.length > 1) for (const t of conj) {
+      const todo = opciones.map((o, i) => o.por[t] ? t : voraz[i]);
+      const r = mejorar(conj, todo);
+      if (r.coste < actual.coste - 0.001) actual = r;
+    }
+    actual.asign = opciones.map((o, i) => ({ o, s: actual.eleccion[i], e: actual.eleccion[i] == null ? null : o.por[actual.eleccion[i]] }));
+    // una tienda que se queda sin productos no se usa (ni paga envío)
+    actual.usadas = conj.filter(s => actual.sub[s] != null);
+    actual.sustitutos = actual.asign.filter(a => a.e && a.e.como === "sustituto").length;
+    return actual;
+  };
+  const posibles = [...activas].filter(s => !envio || (AJ.envios[s] && AJ.envios[s].activo));
+  const subconjuntos = [];
+  (function rec(i, act) {
+    if (act.length) subconjuntos.push(act);
+    for (let j = i; j < posibles.length; j++) rec(j + 1, [...act, posibles[j]]);
+  })(0, []);
+  const todos = subconjuntos.map(resolver);
+  const orden = (a, b) => a.faltan.length - b.faltan.length || a.cortos.length - b.cortos.length || a.coste - b.coste;
+  const mejorDe = lista => lista.length ? [...lista].sort(orden)[0] : null;
+  // el mejor plan usando como mucho k supermercados (k = 1…4): nunca sale más caro al permitir más
+  const porMax = {};
+  for (let k = 1; k <= C.tiendas.length; k++) porMax[k] = mejorDe(todos.filter(r => r.usadas.length <= k && r.usadas.length > 0));
+  const plan = porMax[Math.min(maxTiendas, C.tiendas.length)] || null;
+  const mejor = mejorDe(todos.filter(r => r.usadas.length > 0));
+  const unaTienda = Array.from({ length: C.tiendas.length }, (_, s) => ({ ...resolver([s]), sinEnvio: envio && !(AJ.envios[s] && AJ.envios[s].activo) }));
+  const mejorUna = mejorDe(unaTienda.filter(r => activas.has(r.conj[0]) && !r.sinEnvio));
+  return { plan, porMax, mejor, unaTienda, mejorUna, n: vivos.length, envio };
+}
+
+/* ------------------------------------------------------------------ estado de la lista (privado por persona) */
+const CLAVE_LOCAL = "comparador.estado.v1";
+const ESTADO_INICIAL = { items: [], activas: [0, 1, 2, 3], max: 4, envio: false, ajustes: {}, rev: 0 };
+function useEstado() {
+  const [estado, setEstado] = useState(() => ({ ...ESTADO_INICIAL, ...leer(CLAVE_LOCAL, {}) }));
+  const ref = useRef(null), cola = useRef(Promise.resolve()), temporizador = useRef(null), ultimo = useRef(estado);
+  const [sync, setSync] = useState("local");
+  ultimo.current = estado;
+  useEffect(() => {
+    let unsub = null, vivo = true;
+    (async () => {
+      const c = window.claude;
+      if (!c || !c.use) return;
+      const [db, user] = await Promise.all([c.use("db"), c.use("user")]);
+      if (!vivo || !db || !user) return;
+      const uid = await user.id();
+      if (!uid) return;
+      const doc = db.doc("data/users/" + uid + "/estado");
+      ref.current = doc;
+      setSync("nube");
+      unsub = doc.onSnapshot(snap => {
+        if (!snap.exists) { if (ultimo.current.items.length) programar(); return; }
+        if (snap.metadata.hasPendingWrites) return;
+        const r = snap.data();
+        if ((r.rev || 0) > (ultimo.current.rev || 0)) setEstado(e => ({ ...e, ...r }));
+      }, () => setSync("local"));
+    })();
+    return () => { vivo = false; unsub && unsub(); };
+  }, []);
+  const programar = useCallback(() => {
+    clearTimeout(temporizador.current);
+    temporizador.current = setTimeout(() => {
+      const doc = ref.current; if (!doc) return;
+      const datos = JSON.parse(JSON.stringify(ultimo.current));
+      cola.current = cola.current.then(() => doc.set(datos)).catch(() => setSync("local"));
+    }, 600);
+  }, []);
+  const cambiar = useCallback(fn => {
+    setEstado(e => {
+      const n = { ...fn(e), rev: Date.now() };
+      guardar(CLAVE_LOCAL, n);
+      return n;
+    });
+    programar();
+  }, [programar]);
+  return [estado, cambiar, sync];
+}
+
+/* ------------------------------------------------------------------ iconos */
+const svg = (d, extra = {}) => html`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width=${extra.w || 2} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const Icono = {
+  lupa: svg(html`<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>`),
+  inicio: svg(html`<path d="M3.5 10.5 12 4l8.5 6.5V19a1 1 0 0 1-1 1H15v-5.5H9V20H4.5a1 1 0 0 1-1-1z"/>`),
+  lista: svg(html`<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1 1 2-2M3.5 12l1 1 2-2M3.5 18l1 1 2-2"/>`),
+  carro: svg(html`<path d="M3 5h2.5l2.2 10.2a1 1 0 0 0 1 .8h8.6a1 1 0 0 0 1-.8L20 8.5H6.4"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/>`),
+  ajustes: svg(html`<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/>`),
+  mas: svg(html`<path d="M12 5v14M5 12h14"/>`, { w: 2.4 }),
+  menos: svg(html`<path d="M5 12h14"/>`, { w: 2.4 }),
+  papelera: svg(html`<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/>`),
+  ok: svg(html`<path d="m5 12.5 4.5 4.5L19 7.5"/>`, { w: 2.6 }),
+  x: svg(html`<path d="M6 6l12 12M18 6 6 18"/>`, { w: 2.2 }),
+  flecha: svg(html`<path d="m9 6 6 6-6 6"/>`, { w: 2.4 }),
+  atras: svg(html`<path d="m15 6-6 6 6 6"/>`, { w: 2.4 }),
+  etiqueta: svg(html`<path d="M3.5 12.5V4.5h8l8.5 8.5-8 8z"/><circle cx="8" cy="9" r="1.4"/>`),
+};
+
+/* ------------------------------------------------------------------ piezas */
+const LOGOS = ["logos/mercadona.png", "logos/consum.png", "logos/dia.png", "logos/lidl.png"];
+const Logo = ({ C, s, t = 24 }) => html`<img class="logo" src=${LOGOS[s]} width=${t} height=${t} alt=${C ? C.tiendas[s] : ""} loading="lazy" decoding="async" />`;
+const TiendaChip = ({ C, s, t = 18 }) => html`<span class="tienda-chip"><${Logo} C=${null} s=${s} t=${t} /><span translate="no">${C.tiendas[s]}</span></span>`;
+
+const Foto = memo(function Foto({ C, p, t = 56, radio }) {
+  if (!p || p.foto < 0) return html`<div class="foto vacia" style=${{ width: t, height: t }} aria-hidden="true">Sin foto</div>`;
+  const porHoja = C.columnas * C.columnas, hoja = Math.floor(p.foto / porHoja), celda = p.foto % porHoja;
+  const col = celda % C.columnas, fila = Math.floor(celda / C.columnas);
+  return html`<div class="foto" role="img" aria-label=${p.n} style=${{
+    width: t, height: t, borderRadius: radio, backgroundImage: `url(miniaturas/m${String(hoja).padStart(3, "0")}.webp)`,
+    backgroundSize: `${C.columnas * t}px ${C.columnas * t}px`, backgroundPosition: `-${col * t}px -${fila * t}px` }}></div>`;
+});
+
+// etiquetas: más saludable (con su motivo), Cheque Crece y oferta pack
+function Etiquetas({ p, todas = true }) {
+  const t = [];
+  if (p.a) t.push(html`<span key="o" class="tag oferta">Oferta</span>`);
+  const nv = nivelDe(p);
+  if (nv === 4) t.push(html`<span key="s" class="tag sano">${todas ? p.mo : "Natural"}</span>`);
+  else if (AJ.saludable && nv === 0) t.push(html`<span key="s" class="tag ultra">Ultraprocesado</span>`);
+  if (p.ch > 0) t.push(html`<span key="c" class="tag cheque">${AJ.socio ? "−" : "+"}${fmt(p.ch)} Cheque Crece</span>`);
+  if (todas && p.pk) t.push(html`<span key="p" class="tag neutra">${p.pk[0]} × ${fmt(p.pk[1])}</span>`);
+  if (todas && p.gr) t.push(html`<span key="g" class="tag neutra">Formato grande</span>`);
+  return t.length ? html`<span class="tags">${t}</span>` : null;
+}
+
+/* «+» que se convierte en «− 1 +» al añadir */
+function Cantidad({ n, mas, menos, nombre }) {
+  if (!n) return html`<span class="cantidad sola"><button onClick=${mas} aria-label=${`Añadir ${nombre} a la lista`}>${Icono.mas}</button></span>`;
+  return html`<span class="cantidad abierta" role="group" aria-label=${`Cantidad de ${nombre}`}>
+    <button onClick=${menos} aria-label=${n === 1 ? `Quitar ${nombre} de la lista` : `Quitar una unidad de ${nombre}`}>${n === 1 ? Icono.papelera : Icono.menos}</button>
+    <output aria-live="polite">${n}</output>
+    <button onClick=${mas} aria-label=${`Añadir una unidad de ${nombre}`}>${Icono.mas}</button></span>`;
+}
+
+const TarjetaProducto = memo(function TarjetaProducto({ C, p, n, poner, abrir }) {
+  const pu = upEf(p);
+  return html`<li class="pcard">
+    <button class="abrir" onClick=${() => abrir(p)} aria-label=${`${p.n}, ${C.tiendas[p.s]}, ${fmt(precioEf(p))}`}>
+      <div class="imagen"><${Foto} C=${C} p=${p} t=${112} /><${Logo} C=${C} s=${p.s} t=${26} /></div>
+      <div style=${{ display: "grid", gap: 4, minWidth: 0 }}>
+        <span class="precio">${fmt(precioEf(p))}${p.a ? html`<s>${fmt(p.a)}</s>` : ""}</span>
+        <span class="pu">${pu != null ? fmtU(pu, p.u) : " "}</span>
+        <span class="n">${p.n}</span>
+        <${Etiquetas} p=${p} todas=${false} />
+      </div>
+    </button>
+    <div class="accion"><${Cantidad} n=${n} nombre=${p.n} mas=${() => poner(p, n + 1)} menos=${() => poner(p, n - 1)} /></div>
+  </li>`;
+});
+
+const FilaProducto = memo(function FilaProducto({ C, p, n, poner, abrir, extra }) {
+  const pu = upEf(p);
+  return html`<li class="fila">
+    <button class="abrir" onClick=${() => abrir(p)} aria-label=${`${p.n}, ${C.tiendas[p.s]}, ${fmt(precioEf(p))}`}>
+      <${Foto} C=${C} p=${p} t=${52} />
+      <span class="info"><span class="n">${p.n}</span>
+        <span class="meta"><${TiendaChip} C=${C} s=${p.s} t=${16} /></span>
+        ${extra || html`<${Etiquetas} p=${p} />`}</span>
+      <span class="pu">${fmt(precioEf(p))}${pu != null && html`<small>${fmtU(pu, p.u)}</small>`}</span>
+    </button>
+    <${Cantidad} n=${n} nombre=${p.n} mas=${() => poner(p, n + 1)} menos=${() => poner(p, n - 1)} />
+  </li>`;
+});
+
+/* ------------------------------------------------------------------ buscar */
+function QueBuscas({ C, opciones, cat, elegir }) {
+  if (opciones.length < 2) return null;
+  return html`<div class="intencion">
+    <p class="h3" id="int-tit">¿Qué buscas?</p>
+    <div class="chips" role="group" aria-labelledby="int-tit">
+      ${opciones.map(o => html`<button key=${o.c} class="chip" aria-pressed=${cat === o.c} onClick=${() => elegir(o.c)}>
+        ${C.cats[o.c].nombre}<span class="cuenta">${o.n}</span></button>`)}
+      <button class="chip" aria-pressed=${cat === -1} onClick=${() => elegir(-1)}>Todo</button>
+    </div></div>`;
+}
+
+function Comparativa({ C, comp, cantidadDe, poner, abrir, refinar, q, cat, grandes, setGrandes }) {
+  if (!comp) return null;
+  const aviso = comp.ocultos > 0 || grandes
+    ? html`<p class="peq">${grandes ? "Incluye piezas enteras y formatos de hostelería. " : `No cuenta ${comp.ocultos === 1 ? "1 pieza entera o formato grande" : comp.ocultos + " piezas enteras o formatos grandes"}, poco habituales en casa. `}
+        <button class="enlace-btn" onClick=${() => setGrandes(!grandes)}>${grandes ? "Quitarlos" : "Incluirlos"}</button></p>` : null;
+  if (comp.solo || !comp.filas || !comp.filas.length) return aviso ? html`<section class="tarjeta comp">${aviso}</section>` : null;
+  const { filas, u } = comp;
+  const mejor = filas[0];
+  const resto = filas.slice(1);
+  const n = cantidadDe(mejor.p.k);
+  const motivo = AJ.saludable && mejor.p.sa > 0;
+  return html`<section class="tarjeta comp" aria-labelledby="comp-tit">
+    <div class="comp-cab"><div style=${{ minWidth: 0 }}><h2 class="h2" id="comp-tit">${comp.titulo}</h2>
+      <p class="peq">${cat >= 0 ? C.cats[cat].nombre + " · " : ""}${AJ.saludable ? "gana lo más natural; luego el más barato" : "gana el más barato"} por ${UNID[u]}</p></div></div>
+    <button class="ganador" onClick=${() => abrir(mejor.p)} aria-label=${`Más ${AJ.saludable ? "sano" : "barato"}: ${mejor.p.n} en ${C.tiendas[mejor.s]}, ${fmtU(upEf(mejor.p), u)}`}>
+      <span class="sello">${AJ.saludable ? "Más sano" : "Más barato"}</span>
+      <${Foto} C=${C} p=${mejor.p} t=${76} />
+      <span style=${{ display: "grid", gap: 6, minWidth: 0 }}>
+        <${TiendaChip} C=${C} s=${mejor.s} t=${20} />
+        <span class="precio">${fmt(precioEf(mejor.p))} <small class="pu-gan">${fmtU(upEf(mejor.p), u)}</small></span>
+        <span class="n">${mejor.p.n}</span>
+        ${(motivo || chequeDe(mejor.p) > 0) && html`<span class="tags">${motivo && html`<span class="tag">${mejor.p.mo}</span>`}${chequeDe(mejor.p) > 0 && html`<span class="tag">−${fmt(mejor.p.ch)} Cheque Crece</span>`}</span>`}
+      </span>
+    </button>
+    ${resto.length > 0 && html`<ul class="rivales">${resto.map(f => {
+      const d = upEf(f.p) - upEf(mejor.p);
+      return html`<li key=${f.s}><button class="rival" onClick=${() => abrir(f.p)} aria-label=${`${C.tiendas[f.s]}: ${f.p.n}, ${fmtU(upEf(f.p), f.p.u)}`}>
+        <${Logo} C=${C} s=${f.s} t=${36} />
+        <span style=${{ minWidth: 0 }}><span class="n" style=${{ display: "block" }}>${f.p.n}${f.aprox ? " (similar)" : ""}</span>
+          <span class="peq">${fmtU(upEf(f.p), f.p.u)}${d >= 0.005 && !AJ.saludable ? html` · <span class="dif">+${fmt(d)}/${UNID[f.p.u]}</span>` : d <= -0.005 ? ` · ${fmt(d)}/${UNID[f.p.u]}` : " · mismo precio por " + UNID[f.p.u]}${AJ.saludable && f.p.sa > 0 ? ` · ${f.p.mo}` : ""}</span></span>
+        <span class="pu">${fmt(precioEf(f.p))}</span>
+      </button></li>`;
+    })}</ul>`}
+    ${aviso}
+    <button class="btn ancho" onClick=${() => poner(mejor.p, n + 1)}>${Icono.mas} ${n ? `Añadir otra (${n} en tu lista)` : `Añadir a la lista · ${fmt(precioEf(mejor.p))}`}</button>
+    ${comp.refinar.length > 0 && html`<div style=${{ display: "grid", gap: 8 }}><p class="peq">Afina la búsqueda</p>
+      <div class="chips">${comp.refinar.map(w => html`<button key=${w} class="chip" onClick=${() => refinar(q.trim() + " " + w, cat)}>${w}</button>`)}</div></div>`}
+  </section>`;
+}
+
+function Resultados({ C, r, cantidadDe, poner, abrir }) {
+  const [orden, setOrden] = useState("relevancia");
+  const [tienda, setTienda] = useState(-1);
+  const [ver, setVer] = useState(24);
+  useEffect(() => setVer(24), [r, orden, tienda]);
+  const lista = useMemo(() => {
+    let l = r.res.filter(x => tienda < 0 || x.p.s === tienda);
+    const pu = x => x.p.up == null ? Infinity : upEf(x.p);
+    const sano = (a, b) => AJ.saludable ? b.p.sa - a.p.sa : 0;
+    if (orden === "relevancia") l = [...l].sort((a, b) => a.nivel - b.nivel || a.p.gr - b.p.gr || sano(a, b) || a.extra - b.extra || pu(a) - pu(b));
+    else if (orden === "sano") l = [...l].sort((a, b) => b.p.sa - a.p.sa || pu(a) - pu(b));
+    else if (orden === "unidad") l = [...l].sort((a, b) => pu(a) - pu(b));
+    else l = [...l].sort((a, b) => precioEf(a.p) - precioEf(b.p));
+    return l;
+  }, [r, orden, tienda, AJ]);
+  return html`<section class="seccion" aria-labelledby="res-tit">
+    <div class="barra-res">
+      <h2 class="h2" id="res-tit">${lista.length.toLocaleString("es-ES")} ${lista.length === 1 ? "producto" : "productos"}</h2>
+      <label><span class="sr">Ordenar por</span>
+        <select id="orden" name="orden" value=${orden} onChange=${e => setOrden(e.target.value)}>
+          <option value="relevancia">Más relevantes</option><option value="unidad">Precio por kg o L</option>
+          <option value="precio">Precio</option><option value="sano">Más saludables</option>
+        </select></label>
+    </div>
+    <div class="chips" role="group" aria-label="Filtrar por supermercado">
+      <button class="chip" aria-pressed=${tienda < 0} onClick=${() => setTienda(-1)}>Todos</button>
+      ${C.tiendas.map((t, s) => html`<button key=${t} class="chip" aria-pressed=${tienda === s} onClick=${() => setTienda(s)}><${Logo} C=${null} s=${s} t=${20} /><span translate="no">${t}</span></button>`)}
+    </div>
+    <ul class="rejilla-prod">${lista.slice(0, ver).map(x => html`<${TarjetaProducto} key=${x.p.k} C=${C} p=${x.p} n=${cantidadDe(x.p.k)} poner=${poner} abrir=${abrir} aj=${AJ} />`)}</ul>
+    ${ver < lista.length && html`<button class="btn sec ancho" onClick=${() => setVer(v => v + 36)}>Ver ${Math.min(36, lista.length - ver)} más</button>`}
+  </section>`;
+}
+
+function fotosDe(C, tipos, n = 3) {
+  const out = [];
+  for (const ti of tipos) {
+    const p = C.T[ti].prods.find(x => x.foto >= 0 && !x.gr);
+    if (p) out.push(p);
+    if (out.length === n) break;
+  }
+  return out;
+}
+
+function FilaTipo({ C, ti, irA }) {
+  const t = C.T[ti];
+  let m = null;
+  for (const p of t.prods) if (p.up != null && !p.gr && (!m || mejorQue(p, m))) m = p;
+  m = m || t.prods[0];
+  const tiendas = [...new Set(t.prods.map(p => p.s))].sort();
+  return html`<li class="fila sin-accion">
+    <button class="abrir" onClick=${() => irA(t.etq, t.cat)} aria-label=${`Comparar ${t.etq}`}>
+      <${Foto} C=${C} p=${m} t=${52} />
+      <span class="info"><span class="n">${t.etq}</span>
+        <span class="meta">${tiendas.map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${18} />`)}<span>Mejor en ${C.tiendas[m.s]}</span></span></span>
+      <span class="pu">${fmt(precioEf(m))}<small>${m.up != null ? fmtU(upEf(m), m.u) : "desde"}</small></span>
+    </button></li>`;
+}
+
+function VistaSeccion({ C, sec, volver, irA }) {
+  const [cat, setCat] = useState(-1);
+  const [ver, setVer] = useState(40);
+  useEffect(() => { setVer(40); window.scrollTo(0, 0); }, [cat]);
+  const cats = C.catsPorSec[sec];
+  const migas = html`<nav class="peq" aria-label="Estás en" style=${{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+    <button class="enlace-btn" onClick=${volver}>Inicio</button><span aria-hidden="true">›</span>
+    ${cat < 0 ? html`<span aria-current="page">${C.secciones[sec]}</span>` : html`<button class="enlace-btn" onClick=${() => setCat(-1)}>${C.secciones[sec]}</button><span aria-hidden="true">›</span><span aria-current="page">${C.cats[cat].nombre}</span>`}</nav>`;
+  if (cat < 0) return html`<section class="seccion" aria-labelledby="sec-tit">${migas}
+    <h2 class="titulo-grande" id="sec-tit" style=${{ fontSize: 28 }}>${C.secciones[sec]}</h2>
+    <div class="rejilla-sec">${cats.map(c => html`<button key=${c.i} class="sec-tile" onClick=${() => setCat(c.i)}>
+      <span class="collage" aria-hidden="true">${fotosDe(C, c.tipos.length ? c.tipos : []).map(p => html`<${Foto} key=${p.k} C=${C} p=${p} t=${46} />`)}</span>
+      <span><b>${c.nombre}</b><span class="peq" style=${{ display: "block" }}>${c.tipos.length ? `${c.tipos.length} comparativas` : `${c.n} productos`}</span></span></button>`)}</div>
+  </section>`;
+  const c = C.cats[cat];
+  return html`<section class="seccion" aria-labelledby="cat-tit">${migas}
+    <h2 class="titulo-grande" id="cat-tit" style=${{ fontSize: 28 }}>${c.nombre}</h2>
+    ${c.tipos.length ? html`<p class="sub">${c.tipos.length} productos que puedes comparar en dos o más supermercados.</p>
+      <ul class="filas tarjeta">${c.tipos.slice(0, ver).map(ti => html`<${FilaTipo} key=${ti} C=${C} ti=${ti} irA=${irA} />`)}</ul>
+      ${ver < c.tipos.length && html`<button class="btn sec ancho" onClick=${() => setVer(v => v + 60)}>Ver más</button>`}`
+    : html`<p class="sub">Ningún producto de esta categoría está a la vez en dos supermercados. Búscalo por su nombre para ver los ${c.n} que hay.</p>`}
+  </section>`;
+}
+
+function Inicio({ C, irA, abrirSec }) {
+  const secs = useMemo(() => C.secciones.map((n, i) => ({ n, i, fotos: fotosDe(C, C.tiposPorSec[i]) })).filter(x => C.catsPorSec[x.i].length), [C]);
+  const basicos = useMemo(() => BASICOS.map(([texto, clave]) => {
+    const c = C.cats.find(x => x.clave === clave);
+    const r = buscar(C, texto);
+    const p = r && r.res.find(x => x.p.foto >= 0 && (!c || x.p.cat === c.i) && x.nivel <= 1);
+    return { texto, cat: c ? c.i : undefined, p: p && p.p };
+  }), [C]);
+  return html`<div>
+    <section class="seccion" aria-labelledby="bas-tit">
+      <h2 class="h2" id="bas-tit">Lo de siempre</h2>
+      <div class="chips">${basicos.map(b => html`<button key=${b.texto} class="chip" style=${{ paddingLeft: b.p ? 5 : 14 }} onClick=${() => irA(b.texto, b.cat)}>
+        ${b.p && html`<${Foto} C=${C} p=${b.p} t=${28} />`}${b.texto}</button>`)}</div>
+    </section>
+    <section class="seccion" aria-labelledby="secs-tit">
+      <h2 class="h2" id="secs-tit">Secciones</h2>
+      <div class="rejilla-sec">${secs.map(x => html`<button key=${x.n} class="sec-tile" onClick=${() => abrirSec(x.i)}>
+        <span class="collage" aria-hidden="true">${x.fotos.map(p => html`<${Foto} key=${p.k} C=${C} p=${p} t=${46} />`)}</span>
+        <span><b>${x.n}</b><span class="peq" style=${{ display: "block" }}>${C.tiposPorSec[x.i].length} comparativas</span></span></button>`)}</div>
+    </section>
+  </div>`;
+}
+
+function Buscar({ C, q, setQ, cantidadDe, poner, abrir, aj }) {
+  const qd = useDeferredValue(q);
+  const [sec, setSec] = useState(-1);
+  const [catSel, setCatSel] = useState(null);
+  const [grandes, setGrandes] = useState(false);
+  const pendiente = useRef(null);
+  const irA = useCallback((texto, cat) => { pendiente.current = cat ?? null; setQ(texto); window.scrollTo(0, 0); }, [setQ]);
+  useEffect(() => { setCatSel(pendiente.current); pendiente.current = null; setGrandes(false); }, [qd]);
+  useEffect(() => { if (q) setSec(-1); }, [q]);
+  const r = useMemo(() => buscar(C, qd), [C, qd]);
+  const opciones = useMemo(() => intencion(C, r), [C, r]);
+  const cat = catSel !== null && (catSel === -1 || opciones.some(o => o.c === catSel)) ? catSel : (opciones[0] ? opciones[0].c : -1);
+  const rc = useMemo(() => r && cat >= 0 ? { ...r, res: r.res.filter(x => x.p.cat === cat) } : r, [r, cat]);
+  const comp = useMemo(() => comparar(C, rc, qd, { cat, grandes }), [C, rc, qd, cat, grandes, aj]);
+  if (!qd.trim()) {
+    if (sec >= 0) return html`<${VistaSeccion} C=${C} sec=${sec} volver=${() => setSec(-1)} irA=${irA} />`;
+    return html`<${Inicio} C=${C} irA=${irA} abrirSec=${i => { setSec(i); window.scrollTo(0, 0); }} />`;
+  }
+  if (!r || !r.res.length) return html`<div class="vacio"><span class="icono-grande">${Icono.lupa}</span><h2 class="h2">Nada para «${qd}»</h2>
+    <p>Prueba con menos palabras o con el nombre genérico del producto: «leche» en lugar de una marca.</p></div>`;
+  return html`<div>
+    <${QueBuscas} C=${C} opciones=${opciones} cat=${cat} elegir=${setCatSel} />
+    <div class="seccion" style=${{ marginTop: 14 }}><${Comparativa} C=${C} comp=${comp} cantidadDe=${cantidadDe} poner=${poner} abrir=${abrir} refinar=${irA} q=${qd}
+      cat=${cat} grandes=${grandes} setGrandes=${setGrandes} /></div>
+    <${Resultados} C=${C} r=${rc} cantidadDe=${cantidadDe} poner=${poner} abrir=${abrir} />
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ lista */
+function ResumenPlan({ C, r, ir, compacto }) {
+  const plan = r && r.plan;
+  if (!plan) return null;
+  return html`<button class="tarjeta" onClick=${() => ir("comprar")} style=${{ border: 0, textAlign: "left", width: "100%", padding: 16, display: "grid", gridTemplateColumns: "minmax(0,1fr) auto", gap: 12, alignItems: "center" }}
+    aria-label=${`Ver dónde comprar. Total ${fmt(plan.total)}`}>
+    <span style=${{ display: "grid", gap: 6, minWidth: 0 }}>
+      <span class="peq">${plan.usadas.length > 1 ? "Lo más barato, repartiendo" : "Lo más barato hoy"}${plan.gastos ? ", con envío" : ""}</span>
+      <span style=${{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        ${plan.usadas.map(s => html`<${TiendaChip} key=${s} C=${C} s=${s} t=${22} />`)}</span>
+    </span>
+    <span style=${{ display: "flex", alignItems: "center", gap: 6 }}><span class="num" style=${{ font: `800 ${compacto ? 22 : 26}px/1 var(--display)` }}>${fmt(plan.total)}</span>${Icono.flecha}</span>
+  </button>`;
+}
+
+function Lista({ C, estado, cambiar, abrir, ir, poner, r }) {
+  const [vaciar, setVaciar] = useState(false);
+  const items = estado.items;
+  const pend = items.filter(it => !it.h).length;
+  const fijar = (k, fn) => cambiar(e => ({ ...e, items: e.items.map(it => it.k === k ? fn(it) : it) }));
+  if (!items.length) return html`<div class="vacio"><span class="icono-grande">${Icono.lista}</span><h2 class="h2">Tu lista está vacía</h2>
+    <p>Busca un producto y pulsa + para añadirlo. Después verás en qué supermercado te sale más barata la compra.</p>
+    <button class="btn" onClick=${() => ir("buscar")}>${Icono.lupa} Buscar productos</button></div>`;
+  return html`<div>
+    <section class="seccion" style=${{ marginTop: 14 }}><${ResumenPlan} C=${C} r=${r} ir=${ir} /></section>
+    <section class="seccion" aria-labelledby="lista-tit">
+      <div class="seccion-cab"><h2 class="h2" id="lista-tit">Productos</h2><span class="peq">${pend} de ${items.length} por coger</span></div>
+      <ul class="filas tarjeta">${items.map(it => {
+        const p = C.porClave.get(it.k);
+        return html`<li key=${it.k} class="fila ${it.h ? "hecho" : ""}" style=${{ gridTemplateColumns: "auto minmax(0,1fr) auto" }}>
+          <button class="check" aria-pressed=${!!it.h} aria-label=${it.h ? `Desmarcar ${it.n}` : `Marcar ${it.n} como cogido`} onClick=${() => fijar(it.k, x => ({ ...x, h: !x.h }))}>
+            <span>${it.h ? Icono.ok : ""}</span></button>
+          ${p ? html`<button class="abrir" style=${{ gridTemplateColumns: "48px minmax(0,1fr)" }} onClick=${() => abrir(p)} aria-label=${`Ver ${it.n}`}>
+              <${Foto} C=${C} p=${p} t=${48} />
+              <span class="info"><span class="n">${it.n}</span><span class="meta"><${TiendaChip} C=${C} s=${p.s} t=${16} /><span class="num">${fmt(precioEf(p))}</span></span></span></button>`
+            : html`<span class="info"><span class="n">${it.n}</span><span class="peq">Ya no está a la venta</span></span>`}
+          ${p ? html`<${Cantidad} n=${it.q} nombre=${it.n} mas=${() => poner(p, it.q + 1)} menos=${() => poner(p, it.q - 1)} />`
+            : html`<button class="btn sec peq-btn" onClick=${() => cambiar(e => ({ ...e, items: e.items.filter(x => x.k !== it.k) }))}>Quitar</button>`}
+        </li>`;
+      })}</ul>
+      <div style=${{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        ${items.some(it => it.h) && html`<button class="btn sec peq-btn" onClick=${() => cambiar(e => ({ ...e, items: e.items.filter(it => !it.h) }))}>Quitar lo cogido</button>`}
+        ${!vaciar ? html`<button class="btn sec peq-btn" onClick=${() => setVaciar(true)}>Vaciar lista</button>`
+          : html`<span class="tarjeta" role="alertdialog" aria-label="Confirmar" style=${{ display: "flex", gap: 8, alignItems: "center", padding: "6px 6px 6px 14px", flexWrap: "wrap" }}>
+              <span class="peq">¿Vaciar los ${items.length} productos?</span>
+              <button class="btn peq-btn" onClick=${() => { cambiar(e => ({ ...e, items: [] })); setVaciar(false); }}>Vaciar</button>
+              <button class="btn sec peq-btn" onClick=${() => setVaciar(false)}>Cancelar</button></span>`}
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ comprar */
+function Interruptor({ id, activo, cambiar, titulo, texto, deshabilitado }) {
+  return html`<div class="ajuste">
+    <div style=${{ minWidth: 0 }}><label for=${id} class="ajuste-tit">${titulo}</label>${texto && html`<p class="peq" id=${id + "-d"}>${texto}</p>`}</div>
+    <button id=${id} role="switch" aria-checked=${!!activo} aria-describedby=${texto ? id + "-d" : undefined} class="switch" disabled=${deshabilitado}
+      onClick=${() => cambiar(!activo)}><span></span></button>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ llenar el carrito del súper */
+// Código del marcador «Llenar carrito» (fuente legible en scripts/marcador.js). Se ejecuta en la web del súper, con la sesión
+// de quien lo usa, y añade a su carrito la cesta que esta app pone en la dirección (#comparador=...).
+const MARCADOR = "javascript:" + encodeURIComponent("(async()=>{const e=e=>alert(\"Comparador \u00b7 \"+e);let t,o=(location.href.match(/comparador=([A-Za-z0-9_-]+)/)||[])[1];if(o||(o=prompt(\"Pega el c\u00f3digo de la cesta que copiaste en el Comparador:\")||\"\"),o=((o.match(/comparador=([A-Za-z0-9_-]+)/)||[])[1]||o).trim(),!o)return;try{t=JSON.parse(decodeURIComponent(escape(atob(o.replace(/-/g,\"+\").replace(/_/g,\"/\")))))}catch(t){return e(\"El c\u00f3digo de la cesta no es v\u00e1lido. Vuelve a abrirlo desde la app.\")}const a=location.hostname,r=t.l||[],n=()=>history.replaceState(null,\"\",location.pathname+location.search);try{if(/mercadona\\.es$/.test(a)){if(\"m\"!==t.s)return e(\"Esta cesta es de otro supermercado.\");const o=JSON.parse(localStorage.getItem(\"MO-user\")||\"null\"),a=`?lang=es&wh=${JSON.parse(decodeURIComponent((document.cookie.match(/__mo_da=([^;]+)/)||[])[1]||\"%7B%7D\")).warehouse||\"vlc1\"}`;if(o&&o.token&&o.uuid){const t=`/api/customers/${o.uuid}/cart/${a}`,n={Authorization:\"Bearer \"+o.token,\"Content-Type\":\"application/json\"},s=await(async e=>{const t=await e.text();try{return JSON.parse(t)}catch(e){return null}})(await fetch(t,{headers:n}));if(!s)return e(\"Mercadona no ha devuelto tu carrito. Vuelve a iniciar sesi\u00f3n y prueba otra vez.\");const i=(s.lines||[]).map((e=>({quantity:e.quantity,product_id:e.product.id,sources:e.sources||[],...e.version?{version:e.version}:{}})));for(const[e,t]of r){const o=i.find((t=>String(t.product_id)===String(e)));o?o.quantity+=t:i.push({quantity:t,product_id:String(e),sources:[]})}const c=await fetch(t,{method:\"PUT\",headers:n,body:JSON.stringify({id:s.id,...s.version?{version:s.version}:{},lines:i})});if(!c.ok)return e(\"Mercadona no ha aceptado la cesta (error \"+c.status+\").\")}else{const e=JSON.parse(localStorage.getItem(\"MO-cart\")||\"null\")||{id:crypto.randomUUID(),lines:[]};e.id=e.id||crypto.randomUUID();for(const[t,o]of r){const a=e.lines.find((e=>String(e.product_id)===String(t)));a?a.quantity+=o:e.lines.push({quantity:o,product_id:String(t),sources:[]})}localStorage.setItem(\"MO-cart\",JSON.stringify(e))}n(),e(`A\u00f1adidos ${r.length} productos al carrito de Mercadona.`),location.reload()}else if(/consum\\.es$/.test(a)){if(\"c\"!==t.s)return e(\"Esta cesta es de otro supermercado.\");let o=null;for(const e of[localStorage,sessionStorage])for(let t=0;t<e.length;t++){const a=(e.getItem(e.key(t))||\"\").match(/eyJ[\\w-]+\\.[\\w-]+\\.[\\w-]+/g)||[];for(const e of a)try{const t=JSON.parse(atob(e.split(\".\")[1].replace(/-/g,\"+\").replace(/_/g,\"/\")));t.tolId&&(!t.exp||1e3*t.exp>Date.now())&&(o={t:e,id:t.tolId})}catch(e){}}const a=JSON.parse(localStorage.getItem(\"CookieTol\")||\"null\")||{expireDate:new Date(Date.now()+864e5).toISOString(),value:{}};if(o){const t=(a.value&&(a.value.zoneId??a.value.zone))??0,n=a.value&&a.value.shippingZoneId||\"0D\",s={Authorization:\"Bearer \"+o.t,\"X-TOL-USERID\":String(o.id),\"X-TOL-LOCALE\":\"es\",\"X-TOL-ZONE\":String(t),\"X-TOL-CHANNEL\":\"1\",\"X-TOL-CURRENCY\":\"EUR\",\"X-TOL-SHIPPING-ZONE\":String(n),\"X-TOL-APP\":\"shop-front\",\"Content-Type\":\"application/json\"},i=r.map((([e,t,o])=>({id:Number(e),quantity:t,remarks:\"\",...o?{code:String(o)}:{}}))),c=await fetch(`/api/rest/V2.0/shopping/cart/products?loadCoupons=true&shippingZoneId=${n}&shippingMethod=D`,{method:\"POST\",headers:s,body:JSON.stringify(i)});if(!c.ok)return e(\"Consum no ha aceptado la cesta (error \"+c.status+\"). Abre el carrito una vez y vuelve a probar.\")}else{a.value=a.value||{};const e=a.value.products||[];for(const[t,o,a]of r){const r=e.find((e=>String(e.id)===String(t)));r?r.quantity+=o:e.push({id:Number(t),quantity:o,remarks:\"\",code:a?String(a):void 0})}a.value.products=e,localStorage.setItem(\"CookieTol\",JSON.stringify(a));const t=Storage.prototype.setItem;Storage.prototype.setItem=function(e,o){if(\"CookieTol\"!==e)return t.call(this,e,o)}}n(),e(`A\u00f1adidos ${r.length} productos al carrito de Consum.`),location.reload()}else if(/dia\\.es$/.test(a)){if(\"d\"!==t.s)return e(\"Esta cesta es de otro supermercado.\");let o=0,a=0;for(const[e,t]of r){(await fetch(\"/api/v1/cart/current/item\",{method:\"POST\",credentials:\"include\",headers:{Accept:\"application/json\",\"Content-Type\":\"application/json\",\"X-Requested-With\":\"XMLHttpRequest\"},body:JSON.stringify({sku_id:String(e),quantity:t})})).ok?o++:a++}n(),e(`A\u00f1adidos ${o} productos al carrito de DIA${a?` (${a} no se pudieron a\u00f1adir: puede que no est\u00e9n disponibles en tu zona)`:\"\"}.`),location.href=\"/cart\"}else e(\"Abre primero la web de Mercadona, Consum o DIA (el bot\u00f3n \u00abLlenar carrito\u00bb de la app te lleva) y pulsa el marcador all\u00ed.\")}catch(t){e(\"No se ha podido llenar el carrito: \"+t.message)}})();");
+const WEB_SUPER = ["https://tienda.mercadona.es/", "https://tienda.consum.es/es", "https://www.dia.es/"];
+const COD_SUPER = ["m", "c", "d"];
+const b64url = t => btoa(unescape(encodeURIComponent(t))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function codigoCesta(s, filas) {
+  const l = filas.map(f => {
+    const p = f.e.p, code = s === 1 && p.url ? (p.url.match(/\/(\d+)\/?$/) || [])[1] : undefined;
+    return code ? [p.id, f.e.n, code] : [p.id, f.e.n];
+  });
+  return b64url(JSON.stringify({ s: COD_SUPER[s], l }));
+}
+const enlaceCesta = (s, filas) => WEB_SUPER[s] + "#comparador=" + codigoCesta(s, filas);
+
+function Marcador({ compacto }) {
+  const ref = useRef(null);
+  const [copiado, setCopiado] = useState(false);
+  useEffect(() => { if (ref.current) ref.current.setAttribute("href", MARCADOR); }, []);
+  const copiar = async () => { try { await navigator.clipboard.writeText(MARCADOR); setCopiado(true); setTimeout(() => setCopiado(false), 2500); } catch (e) { setCopiado(null); } };
+  return html`<div style=${{ display: "grid", gap: 10 }}>
+    ${!compacto && html`<p class="peq">Los súper no dejan que otra web llene su carrito, pero sí un marcador de tu navegador: lo pulsas estando en su web, con tu sesión, y añade toda la cesta de golpe. Se instala una sola vez y vale para Mercadona, Consum y DIA. Lo que añade es lo mismo que verás luego en su app, porque el carrito va con tu cuenta.</p>`}
+    <ol class="criterio">
+      <li><b>Copia el marcador:</b> <button class="enlace-btn" onClick=${copiar}>${copiado ? "¡Copiado!" : copiado === null ? "No se pudo copiar: mantén pulsado el enlace de abajo" : "Copiar marcador"}</button></li>
+      <li><b>iPhone (Safari):</b> abre cualquier web, pulsa Compartir → «Añadir marcador», ponle de nombre <b>Llenar carrito</b> y guárdalo. Después ve a Marcadores, pulsa «Editar», toca el marcador y cambia su dirección pegando lo que copiaste.</li>
+      <li><b>Ordenador:</b> arrastra este enlace a la barra de marcadores: <a ref=${ref} class="enlace" onClick=${e => { e.preventDefault(); copiar(); }}>Llenar carrito</a></li>
+      <li><b>Para usarlo:</b> en la cesta pulsa «Llenar carrito en…»; se abre la web del súper; ahí abre Marcadores y toca «Llenar carrito». Si no has iniciado sesión, lo deja en el carrito de invitado y lo conservas al identificarte.</li>
+    </ol>
+  </div>`;
+}
+
+function GrupoTienda({ C, g, plan, envio, abrir, copiar }) {
+  const [web, setWeb] = useState(false);
+  const [ayuda, setAyuda] = useState(false);
+  const e = AJ.envios[g.s];
+  const sub = plan.sub[g.s] || 0;
+  const gasto = envio ? plan.envios[g.s] : null;
+  const falta = envio && e.umbral && sub < e.umbral ? r2(e.umbral - sub) : 0;
+  const corto = envio && plan.cortos.includes(g.s);
+  const texto = g.filas.map(f => `${f.e.n > 1 ? f.e.n + " × " : ""}${f.e.p.n}`).join("\n");
+  return html`<div class="tarjeta grupo">
+    <div class="grupo-cab"><${Logo} C=${C} s=${g.s} t=${36} />
+      <span style=${{ minWidth: 0 }}><span class="h3" translate="no">${C.tiendas[g.s]}</span><span class="peq" style=${{ display: "block" }}>${g.filas.length} ${g.filas.length === 1 ? "producto" : "productos"}</span></span>
+      <span class="subtotal">${fmt(r2(sub + (gasto || 0)))}</span></div>
+    ${g.filas.map(f => html`<div key=${f.o.it.k} class="linea">
+      <button style=${{ all: "unset", cursor: "pointer", borderRadius: 12 }} onClick=${() => abrir(f.e.p)} aria-label=${`Ver ${f.e.p.n}`}><${Foto} C=${C} p=${f.e.p} t=${44} /></button>
+      <div style=${{ minWidth: 0 }}><div>${f.e.n > 1 ? `${f.e.n} × ` : ""}${f.e.p.n}</div>
+        ${f.e.menosNatural && html`<div class="eq aviso">Menos natural que el que elegiste (${f.o.p.mo || NIVELES[nivelDe(f.o.p)]} → ${f.e.p.mo || NIVELES[nivelDe(f.e.p)]}): ${C.tiendas[g.s]} no tiene nada igual de natural</div>`}
+        ${f.e.como === "sustituto" ? html`<div class="eq aviso">Sustituto: ${C.tiendas[g.s]} no tiene «${f.o.it.n}» ni uno del mismo tipo; es lo más parecido</div>`
+          : f.e.como !== "igual" && html`<div class="eq">En lugar de ${f.o.it.n}${f.e.como === "parecido" ? " (parecido)" : f.e.como === "equivalente" ? ": aquí se llama así" : ""}</div>`}
+        ${g.s !== f.o.p.s && f.o.por[f.o.p.s] && f.o.por[f.o.p.s].coste - f.e.coste >= 0.01 && html`<div class="eq">Ahorras ${fmt(r2(f.o.por[f.o.p.s].coste - f.e.coste))} frente a comprarlo en ${C.tiendas[f.o.p.s]}</div>`}
+        ${chequeDe(f.e.p) > 0 && html`<div class="eq">Incluye ${fmt(r2(chequeDe(f.e.p) * f.e.n))} de Cheque Crece</div>`}</div>
+      <span class="num" style=${{ fontWeight: 600 }}>${fmt(f.e.coste)}</span></div>`)}
+    ${envio && html`<div class="linea"><span></span><div>
+        <div>${gasto ? "Gastos de envío" : "Envío gratis"}</div>
+        ${falta > 0 && html`<div class="eq">Añade ${fmt(falta)} más y el envío ${e.costeSobre ? `baja a ${fmt(e.costeSobre)}` : "es gratis"}</div>`}
+        ${corto && html`<div class="eq aviso">Pedido mínimo de ${fmt(e.minimo)}: faltan ${fmt(r2(e.minimo - sub))}</div>`}</div>
+      <span class="num" style=${{ fontWeight: 600 }}>${gasto ? fmt(gasto) : fmt(0)}</span></div>`}
+    ${g.s <= 2 && html`<div class="llenar">
+      <a class="btn ancho" href=${enlaceCesta(g.s, g.filas)} target="_blank" rel="noopener" style=${{ textDecoration: "none" }}>${Icono.carro} Llenar carrito en ${C.tiendas[g.s]}</a>
+      <p class="peq">Se abre su web: toca tu marcador «Llenar carrito» y se añade todo. <button class="enlace-btn" aria-expanded=${ayuda} onClick=${() => setAyuda(!ayuda)}>${ayuda ? "Ocultar" : "¿Primera vez?"}</button>
+        <button class="enlace-btn" onClick=${() => copiar(enlaceCesta(g.s, g.filas), "la cesta")}>Copiar código</button></p>
+      ${ayuda && html`<${Marcador} compacto=${true} />`}
+    </div>`}
+    <div class="grupo-pie">
+      <button class="enlace-btn" aria-expanded=${web} onClick=${() => setWeb(!web)}>${web ? "Ocultar enlaces" : `Producto a producto en ${C.tiendas[g.s]}`}</button>
+      <button class="enlace-btn" onClick=${() => copiar(texto, C.tiendas[g.s])}>Copiar lista</button>
+    </div>
+    ${web && html`<div class="web-lista">
+      <p class="peq">Abre cada producto en la web de ${C.tiendas[g.s]} y añádelo a su carrito.${g.s === 3 ? " LIDL no vende alimentación online: llévate la lista a la tienda." : ""}</p>
+      <ol>${g.filas.map(f => html`<li key=${f.o.it.k}>${f.e.p.url ? html`<a class="enlace" href=${f.e.p.url} target="_blank" rel="noopener">${f.e.n > 1 ? `${f.e.n} × ` : ""}${f.e.p.n}</a>` : f.e.p.n}</li>`)}</ol>
+    </div>`}
+  </div>`;
+}
+
+/* Formas de hacer la compra, de más barata a más cara: en uno, dos o los súper que haga falta, en tienda o con envío */
+function Escenarios({ C, r, otro, estado, cambiar }) {
+  if (!r || !r.porMax) return null;
+  const nombre = x => x.usadas.map(s => C.tiendas[s]).join(" + ");
+  const filas = [], vistos = new Set();
+  const poner = (x, envio, max) => {
+    if (!x || !x.usadas.length) return;
+    const clave = (envio ? "e" : "t") + x.usadas.join(",");
+    if (vistos.has(clave)) return;
+    vistos.add(clave);
+    filas.push({ x, envio, max, clave });
+  };
+  for (const [envio, plan] of [[r.envio, r], [!r.envio, otro]]) {
+    if (!plan || !plan.porMax) continue;
+    for (const k of [1, 2, 4]) poner(plan.porMax[k], envio, k);
+  }
+  if (filas.length < 2) return null;
+  const completas = filas.filter(f => !f.x.faltan.length && !f.x.cortos.length);
+  const base = completas.length ? completas : filas;
+  base.sort((a, b) => a.x.total - b.x.total);
+  const mas = base[0];
+  const actual = filas.find(f => f.envio === r.envio && f.x === r.plan) || null;
+  const lista = base.slice(0, 6);
+  return html`<section class="seccion" aria-labelledby="esc-tit">
+    <div class="seccion-cab"><h2 class="h2" id="esc-tit">Todas las formas de comprarlo</h2></div>
+    <p class="peq">Calculado con tu lista entera: los mismos productos (o su equivalente más barato) en cada caso${r.envio || otro ? ", con y sin envío a casa" : ""}. Pulsa una opción para elegirla.</p>
+    <ul class="escenarios tarjeta">${lista.map(f => {
+      const elegido = actual && f.clave === actual.clave;
+      return html`<li key=${f.clave} class=${f === mas ? "mejor" : ""}><button aria-pressed=${!!elegido}
+          onClick=${() => cambiar(e => ({ ...e, envio: f.envio, max: f.max, activas: [...new Set([...e.activas, ...f.x.usadas])].sort() }))}>
+        <span style=${{ minWidth: 0, display: "grid", gap: 3 }}>
+          <span style=${{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", fontWeight: 600 }}>${f.x.usadas.map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${18} />`)}<span translate="no">${nombre(f.x)}</span></span>
+          <span class="peq">${f.envio ? `A domicilio · ${f.x.gastos ? fmt(f.x.gastos) + " de envío" : "envío gratis"}` : "Yendo a la tienda"}${f.x.sustitutos ? ` · ${f.x.sustitutos} sustituto${f.x.sustitutos > 1 ? "s" : ""}` : ""}${f.x.faltan.length ? ` · faltan ${f.x.faltan.length}` : ""}${f.x.cortos.length ? " · no llega al pedido mínimo" : ""}${elegido ? " · lo que ves arriba" : ""}</span>
+        </span>
+        <span class="cifra">${fmt(f.x.total)}</span></button></li>`;
+    })}</ul>
+  </section>`;
+}
+
+function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
+  const activas = useMemo(() => new Set(estado.activas), [estado.activas]);
+  const envio = !!estado.envio;
+  if (!estado.items.length) return html`<div class="vacio"><span class="icono-grande">${Icono.carro}</span><h2 class="h2">Primero, haz tu lista</h2>
+    <p>Añade productos y aquí verás en qué supermercado te sale más barata la compra, junta o repartida.</p>
+    <button class="btn" onClick=${() => ir("buscar")}>${Icono.lupa} Buscar productos</button></div>`;
+  const alternar = s => cambiar(e => {
+    const a = new Set(e.activas); a.has(s) ? a.delete(s) : a.add(s);
+    return { ...e, activas: [...a].sort() };
+  });
+  const copiar = async (texto, tienda) => {
+    try { await navigator.clipboard.writeText(texto); avisar(`Lista de ${tienda} copiada`); }
+    catch (e) { avisar("No se ha podido copiar. Abre los enlaces de cada producto."); }
+  };
+  const plan = r && r.plan;
+  const grupos = plan ? plan.usadas.map(s => ({ s, filas: plan.asign.filter(a => a.s === s) })).sort((a, b) => b.filas.length - a.filas.length) : [];
+  const ahorro = plan && r.mejorUna && plan.faltan.length <= r.mejorUna.faltan.length ? r2(r.mejorUna.total - plan.total) : 0;
+  // ¿el límite de súper elegido hace perder dinero? ¿y el modo (tienda o envío)?
+  const extra = plan && r.mejor && r.mejor !== plan && r.mejor.faltan.length <= plan.faltan.length && !r.mejor.cortos.length ? r2(plan.total - r.mejor.total) : 0;
+  const otroMejor = otro && otro.mejor;
+  const otroAhorro = plan && otroMejor && !otroMejor.faltan.length && !otroMejor.cortos.length && otroMejor.faltan.length <= plan.faltan.length
+    && (r.mejor ? r.mejor.total : plan.total) > 0 && (envio || estado.items.length >= 15 || plan.total >= 60) ? r2((r.mejor && !r.mejor.cortos.length ? r.mejor.total : plan.total) - otroMejor.total) : 0;
+  return html`<div>
+    <section class="seccion tarjeta" style=${{ padding: 16, marginTop: 14 }} aria-label="Cómo quieres comprar">
+      <div class="seg" role="group" aria-label="¿Cómo vas a comprar?">
+        <button aria-pressed=${!envio} onClick=${() => cambiar(e => ({ ...e, envio: false }))}>Voy a la tienda</button>
+        <button aria-pressed=${envio} onClick=${() => cambiar(e => ({ ...e, envio: true }))}>Me lo traen a casa</button>
+      </div>
+      <div class="seg" role="group" aria-label="¿En cuántos supermercados?">
+        ${[[1, "1 súper"], [2, "Hasta 2"], [4, "Los que haga falta"]].map(([n, t]) => html`<button key=${n} aria-pressed=${estado.max === n} onClick=${() => cambiar(e => ({ ...e, max: n }))}>${t}</button>`)}
+      </div>
+      <div class="logos-sel" role="group" aria-label="Supermercados que tienes en cuenta">
+        ${C.tiendas.map((t, s) => {
+          const sinEnvio = envio && !AJ.envios[s].activo;
+          return html`<button key=${t} class="logo-sel" aria-pressed=${activas.has(s) && !sinEnvio} disabled=${sinEnvio} onClick=${() => alternar(s)}>
+            <${Logo} C=${null} s=${s} t=${28} /><span translate="no">${t}</span>${sinEnvio ? html`<span class="peq">· sin envío</span>` : ""}</button>`;
+        })}
+      </div>
+      ${envio && html`<p class="peq">Se suman los gastos de envío de cada súper y se respeta su pedido mínimo. Ajusta las tarifas de tu zona en <button class="enlace-btn" onClick=${() => ir("ajustes")}>Ajustes</button>.</p>`}
+    </section>
+    ${!plan ? html`<div class="vacio"><p>${envio ? "Ninguno de los supermercados elegidos lleva la compra a casa. Activa alguno o elige «Voy a la tienda»." : "Elige al menos un supermercado."}</p></div>` : html`<section class="seccion" aria-live="polite">
+      <div class="tarjeta total">
+        <span class="peq">${grupos.length === 1 ? `Toda la compra en ${C.tiendas[grupos[0].s]}` : `Repartiendo entre ${grupos.map(g => C.tiendas[g.s]).join(" y ")}`}${envio ? ", con envío a casa" : ""}</span>
+        <span class="cifra">${fmt(plan.total)}</span>
+        ${envio && html`<span class="peq">${fmt(plan.productos)} en productos + ${plan.gastos ? fmt(plan.gastos) + " de envío" : "envío gratis"}</span>`}
+        ${ahorro >= 0.01 && html`<span class="etq">${Icono.etiqueta} Ahorras ${fmt(ahorro)} frente a todo en ${C.tiendas[r.mejorUna.conj[0]]}</span>`}
+        ${ahorro < 0.01 && plan.usadas.length === 1 && r.mejor && r.mejor.usadas.length === 1 && html`<span class="peq">Repartir la compra no sale más barato${envio ? " con los gastos de envío" : ""}: ${C.tiendas[plan.usadas[0]]} es lo mejor para tu lista.</span>`}
+        ${extra >= 0.5 && html`<span class="aviso-plan">Repartiendo entre ${r.mejor.usadas.map(s => C.tiendas[s]).join(" y ")} ahorrarías ${fmt(extra)} más.
+          <button class="btn peq-btn" onClick=${() => cambiar(e => ({ ...e, max: 4 }))}>Repartir así</button></span>`}
+        ${otroAhorro >= 0.5 && html`<span class="aviso-plan">${envio ? `Yendo a la tienda te ahorras ${fmt(otroAhorro)}` : `Con envío a casa pagarías ${fmt(otroAhorro)} menos`}${otro.plan ? ` (${otro.plan.usadas.map(s => C.tiendas[s]).join(" + ")})` : ""}.
+          <button class="btn sec peq-btn" onClick=${() => cambiar(e => ({ ...e, envio: !envio }))}>${envio ? "Ver en tienda" : "Ver con envío"}</button></span>`}
+        ${plan.cortos.length > 0 && html`<span class="peq aviso">No llegas al pedido mínimo de ${plan.cortos.map(s => C.tiendas[s]).join(" y ")}.</span>`}
+        ${plan.faltan.length > 0 && html`<span class="peq">No hemos encontrado ${plan.faltan.length === 1 ? "1 producto" : plan.faltan.length + " productos"} en estos supermercados: ${plan.faltan.map(o => o.it.n).join(", ")}.</span>`}
+      </div>
+      ${grupos.map(g => html`<${GrupoTienda} key=${g.s} C=${C} g=${g} plan=${plan} envio=${envio} abrir=${abrir} copiar=${copiar} />`)}
+      <${Escenarios} C=${C} r=${r} otro=${otro} estado=${estado} cambiar=${cambiar} />
+      <p class="peq">«Llenar carrito» usa tu marcador del navegador en la web de cada súper: así entra con tu sesión y añade toda la cesta de golpe. LIDL no vende alimentación online: llévate su lista a la tienda.</p>
+    </section>`}
+    ${r && html`<section class="seccion" aria-labelledby="rk-tit"><h2 class="h2" id="rk-tit">Todo en un solo súper</h2>
+      <ol class="ranking tarjeta">${[...r.unaTienda].sort((a, b) => a.sinEnvio - b.sinEnvio || a.faltan.length - b.faltan.length || a.total - b.total).map(x => html`<li key=${x.conj[0]} class=${r.mejorUna && x.conj[0] === r.mejorUna.conj[0] ? "mejor" : ""}>
+        <${Logo} C=${C} s=${x.conj[0]} t=${36} />
+        <div style=${{ minWidth: 0 }}><b translate="no">${C.tiendas[x.conj[0]]}</b>
+          <div class="peq">${x.sinEnvio ? "No lleva la compra a casa" : x.faltan.length ? `Faltan ${x.faltan.length}: ${x.faltan.map(o => o.it.n).join(", ")}` : "Tiene toda tu lista"}</div>
+          ${envio && !x.sinEnvio && html`<div class="peq">${x.gastos ? `Incluye ${fmt(x.gastos)} de envío` : "Envío gratis"}${x.cortos.length ? " · no llega al pedido mínimo" : ""}</div>`}</div>
+        <span class="cifra">${x.sinEnvio ? "—" : fmt(x.total)}</span></li>`)}</ol>
+      <p class="peq">Si un súper no tiene el producto exacto, se usa el más barato del mismo tipo y tamaño parecido${AJ.saludable ? ", dando prioridad al más saludable" : ""}.</p></section>`}
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ ajustes */
+function Ajustes({ C, estado, cambiar }) {
+  const aj = mezclarAjustes(estado.ajustes);
+  const fijar = cambio => cambiar(e => ({ ...e, ajustes: { ...mezclarAjustes(e.ajustes), ...cambio } }));
+  const fijarEnvio = (s, campo, valor) => cambiar(e => {
+    const a = mezclarAjustes(e.ajustes);
+    return { ...e, ajustes: { ...a, envios: a.envios.map((x, i) => i === s ? { ...x, [campo]: valor } : x) } };
+  });
+  const num = v => { const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) && n >= 0 ? n : 0; };
+  const campo = (s, k, etiqueta, valor) => html`<label class="campo"><span>${etiqueta}</span>
+    <span class="euro"><input id=${`env-${s}-${k}`} name=${`env-${s}-${k}`} inputmode="decimal" autocomplete="off" value=${valor == null ? "" : String(valor).replace(".", ",")}
+      placeholder="Sin umbral…" onChange=${ev => fijarEnvio(s, k, ev.target.value === "" ? null : num(ev.target.value))} /> €</span></label>`;
+  return html`<div>
+    <section class="seccion" aria-labelledby="pref-tit" style=${{ marginTop: 14 }}><h2 class="h2" id="pref-tit">Preferencias</h2>
+      <div class="tarjeta grupo-ios">
+        <${Interruptor} id="aj-sano" activo=${aj.saludable} cambiar=${v => fijar({ saludable: v })} titulo="Priorizar lo más saludable"
+          texto="Elige primero lo más natural (menos aditivos e ingredientes de ultraprocesado, según su lista de ingredientes) y, entre lo igual de natural, lo más barato. No se fija en las calorías." />
+        <${Interruptor} id="aj-socio" activo=${aj.socio} cambiar=${v => fijar({ socio: v })} titulo=${html`<${Logo} C=${null} s=${1} t=${22} /> Soy socio de Consum`}
+          texto="Resta del precio de Consum lo que acumulas en tu Cheque Crece con los productos en promoción. Lo recibes en tu próximo cheque regalo, no en caja." />
+      </div>
+    </section>
+    <section class="seccion" aria-labelledby="marc-tit"><h2 class="h2" id="marc-tit">Llenar el carrito del súper</h2>
+      <div class="tarjeta" style=${{ padding: 16 }}><${Marcador} /></div>
+    </section>
+    <section class="seccion" aria-labelledby="crit-tit"><h2 class="h2" id="crit-tit">Cómo se decide qué es más sano</h2>
+      <div class="tarjeta" style=${{ padding: 16 }}><${Criterio} /></div>
+    </section>
+    <section class="seccion" aria-labelledby="env-tit"><h2 class="h2" id="env-tit">Envío a domicilio</h2>
+      <p class="peq">Tarifas publicadas por cada cadena. Cambian según el código postal: corrígelas si en tu zona son otras.</p>
+      <div class="tarjeta grupo-ios">${C.tiendas.map((t, s) => {
+        const e = aj.envios[s];
+        return html`<div key=${t}>
+          <${Interruptor} id=${`env-${s}`} activo=${e.activo} cambiar=${v => fijarEnvio(s, "activo", v)} titulo=${html`<${Logo} C=${null} s=${s} t=${26} /><span translate="no">${t}</span>`}
+            texto=${e.activo ? "Lleva la compra a tu zona" : s === 3 ? "LIDL no lleva la compra de alimentación a casa" : "No se tiene en cuenta para envíos"} />
+          ${e.activo && html`<div class="campos">
+            ${campo(s, "coste", "Gastos de envío", e.coste)}
+            ${campo(s, "minimo", "Pedido mínimo", e.minimo)}
+            ${campo(s, "umbral", "Desde un pedido de", e.umbral)}
+            ${campo(s, "costeSobre", "el envío cuesta", e.costeSobre)}
+          </div>`}
+        </div>`;
+      })}</div>
+      <button class="btn sec" onClick=${() => fijar({ envios: ENVIOS_DEF })}>Restablecer tarifas</button>
+    </section>
+    <section class="seccion" aria-labelledby="dat-tit"><h2 class="h2" id="dat-tit">Sobre los datos</h2>
+      <div class="tarjeta" style=${{ padding: 16, display: "grid", gap: 10 }}>
+        <div class="super-fila">${C.tiendas.map((t, s) => html`<${Logo} key=${t} C=${C} s=${s} t=${36} />`)}</div>
+        <p class="peq">Precios de las webs de Mercadona, Consum, DIA y LIDL, actualizados cada mañana. Los de Mercadona son los de su almacén de Valencia; los de las demás cadenas, los que muestra su web por defecto. LIDL solo publica online una parte de su surtido.</p>
+      </div>
+    </section>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ ingredientes y naturalidad */
+const TROZOS = new Map();
+function useIngredientes(C, p) {
+  const [d, setD] = useState(undefined);
+  useEffect(() => {
+    let vivo = true;
+    const n = C.trozos_ingredientes;
+    if (!n) { setD(null); return; }
+    let h = 0;
+    for (const ch of p.k) h = (Math.imul(h, 31) + ch.charCodeAt(0)) >>> 0;
+    const j = h % n, url = `ingredientes/i${String(j).padStart(2, "0")}.json`;
+    if (!TROZOS.has(j)) TROZOS.set(j, fetch(url).then(r => r.ok ? r.json() : {}).catch(() => { TROZOS.delete(j); return {}; }));
+    setD(undefined);
+    TROZOS.get(j).then(t => { if (vivo) setD(t[p.k] || null); });
+    return () => { vivo = false; };
+  }, [p.k]);
+  return d;
+}
+// resalta en la lista de ingredientes los aditivos y los ingredientes de ultraprocesado
+const RX_MARCA = /\b(e ?-?\d{3,4}[a-z]?|aromas?|colorantes?|edulcorantes?|sucralosa|acesulfamo?( k)?|aspartamo?|emulgentes?|emulsionantes?|lecitinas?|espesantes?|gelificantes?|estabilizantes?(?! \(?cloruro)|estabilizadores?(?! \(?cloruro)|almid[oó]n(es)? modificados?|jarabe de [a-záéíóú ]+?(?=[,.(]|$)|dextrosa|maltodextrina|conservadores?|conservantes?|antioxidantes?|corrector(es)? de (la )?acidez|regulador(es)? de (la )?acidez|acidulantes?|sorbato [a-z]+|benzoato [a-z]+|nitrito [a-z]+|nitrato [a-z]+|ascorbato [a-z]+|polifosfatos?|difosfatos?|trifosfatos?|fosfatos?|sales de fundido|glutamato [a-z]+|potenciador(es)? del sabor|carragen[a-z]+|goma [a-z]+|aceite de palma|palmiste|grasas? vegetal(es)?|hidrogenad[ao]s?|margarina|caseinato [a-z]+|prote[ií]na [a-z]+ (aislada|hidrolizada)|antiaglomerantes?|gasificantes?|humectantes?)\b/gi;
+function Resaltado({ texto }) {
+  const partes = [];
+  let ult = 0, m;
+  RX_MARCA.lastIndex = 0;
+  while ((m = RX_MARCA.exec(texto))) {
+    if (m.index > ult) partes.push(texto.slice(ult, m.index));
+    partes.push(html`<mark key=${m.index}>${m[0]}</mark>`);
+    ult = m.index + m[0].length;
+  }
+  partes.push(texto.slice(ult));
+  return partes;
+}
+function Nivel({ p }) {
+  const nv = nivelDe(p);
+  return html`<span class=${"nivel" + (nv <= 1 ? " bajo" : "")} role="img" aria-label=${`Nivel ${nv + 1} de 5`}>
+    ${[0, 1, 2, 3, 4].map(i => html`<i key=${i} class=${i <= nv ? "on" : ""}></i>`)}</span>`;
+}
+function Naturalidad({ C, p }) {
+  const d = useIngredientes(C, p);
+  const [abierto, setAbierto] = useState(false);
+  const nv = nivelDe(p);
+  const titulo = sinDatos(p) ? "Sin datos de ingredientes" : NIVELES[nv];
+  return html`<section class="tarjeta natural" aria-labelledby="nat-tit">
+    <div class="cab-nat"><h3 class="h3" id="nat-tit">${titulo}</h3>${!sinDatos(p) && html`<${Nivel} p=${p} />`}</div>
+    <p class="peq">${sinDatos(p) ? (p.s === 3 ? "LIDL no publica sus ingredientes y este producto no está en Open Food Facts." : "Ni la tienda ni Open Food Facts publican sus ingredientes, y no se han podido leer en las fotos del envase.") + " En el modo saludable va por detrás de lo que se sabe que es natural o poco procesado." : p.mo}</p>
+    ${d && d[0] && html`<p class="ingr"><b>Ingredientes${d[5] === "ocr" ? " (leídos de la foto del envase)" : d[5] === "off" ? " (de Open Food Facts)" : ""}: </b><${Resaltado} texto=${d[0]} /></p>`}
+    ${d && (d[1].length > 0 || d[2].length > 0) && html`<p class="peq">${d[1].length ? `Propio de ultraprocesados: ${d[1].join(", ")}. ` : ""}${d[2].length ? `Para conservarlo: ${d[2].join(", ")}.` : ""}</p>`}
+    <button class="enlace-btn" aria-expanded=${abierto} onClick=${() => setAbierto(!abierto)} style=${{ justifySelf: "start" }}>${abierto ? "Ocultar el criterio" : "¿Cómo se decide qué es más sano?"}</button>
+    ${abierto && html`<${Criterio} />`}
+  </section>`;
+}
+function Criterio() {
+  return html`<div style=${{ display: "grid", gap: 8 }}>
+    <p class="peq">Más sano es lo más natural, no lo que tiene menos calorías. Leemos la lista de ingredientes de cada producto y contamos los aditivos y los ingredientes propios de los ultraprocesados. Un queso de «leche, fermentos, sal y cuajo» va por delante de uno «light» con almidón, conservantes y aromas.</p>
+    <ol class="criterio">
+      <li><b>Natural:</b> sin aditivos y con pocos ingredientes, o un alimento fresco sin procesar.</li>
+      <li><b>Sin aditivos:</b> sin aditivos, pero con más ingredientes o con azúcar añadido.</li>
+      <li><b>Poco procesado:</b> lleva un aditivo para conservarlo (conservante, antioxidante o corrector de acidez).</li>
+      <li><b>Con aditivos:</b> varios aditivos de conservación o un ingrediente de ultraprocesado.</li>
+      <li><b>Ultraprocesado:</b> dos o más ingredientes de ultraprocesado: aromas, colorantes, edulcorantes, emulgentes, espesantes, almidones modificados, jarabes de glucosa, grasas vegetales refinadas, proteínas aisladas…</li>
+    </ol>
+    <p class="peq">Entre dos igual de naturales gana el ecológico, el de huevos camperos, el de más % de carne o el integral, y después el más barato. El ácido cítrico, la vitamina C, los fermentos y el cuajo no restan. Los ingredientes salen de las webs de Mercadona y DIA, de Open Food Facts (Consum y LIDL, por su código de barras) y, si no están en ninguna parte, se leen de la foto de la parte de atrás del envase. Lo que no tiene datos de ingredientes va por detrás de lo que se sabe que es natural o poco procesado.</p>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ ficha de producto */
+function Detalle({ C, p, cerrar, poner, cantidadDe, abrir }) {
+  const ref = useRef(null), antes = useRef(document.activeElement);
+  useEffect(() => {
+    const prev = antes.current;
+    ref.current && ref.current.focus();
+    const tecla = e => {
+      if (e.key === "Escape") cerrar();
+      if (e.key === "Tab" && ref.current) {
+        const f = ref.current.querySelectorAll("button, a[href], select, input");
+        if (!f.length) return;
+        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+      }
+    };
+    document.addEventListener("keydown", tecla);
+    const ov = document.body.style.overflow; document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", tecla); document.body.style.overflow = ov; prev && prev.focus && prev.focus(); };
+  }, [p]);
+  const iguales = p.g >= 0 ? (C.porGrupo.get(p.g) || []).filter(x => x.k !== p.k).sort((a, b) => precioEf(a) - precioEf(b)) : [];
+  const otras = [];
+  for (let s = 0; s < C.tiendas.length; s++) {
+    if (s === p.s || iguales.some(x => x.s === s)) continue;
+    const e = equivalente(C, p, s, 1);
+    if (e && e.como !== "igual") otras.push(e);
+  }
+  otras.sort((a, b) => a.coste - b.coste);
+  const n = cantidadDe(p.k);
+  const dominio = p.url ? new URL(p.url).hostname.replace(/^www\./, "") : null;
+  return html`<div>
+    <div class="velo" onClick=${cerrar}></div>
+    <div class="hoja" role="dialog" aria-modal="true" aria-labelledby="det-tit" ref=${ref} tabindex="-1">
+      <div class="hoja-in">
+        <div class="asa" aria-hidden="true"></div>
+        <div class="det-foto"><${Foto} C=${C} p=${p} t=${112} /><${Logo} C=${C} s=${p.s} t=${32} />
+          <button class="cerrar" onClick=${cerrar} aria-label="Cerrar">${Icono.x}</button></div>
+        <div style=${{ display: "grid", gap: 6 }}>
+          <p class="peq">${C.secciones[p.sec]}${C.cats[p.cat] ? ` › ${C.cats[p.cat].nombre}` : ""}</p>
+          <h2 class="h2" id="det-tit">${p.n}</h2>
+          ${p.b && !norm(p.n).includes(norm(p.b)) && html`<p class="peq">${p.b}</p>`}
+        </div>
+        <div class="precio-grande"><b>${fmt(precioEf(p))}</b>${p.up != null && html`<span class="sub num">${fmtU(upEf(p), p.u)}</span>`}
+          ${p.a ? html`<span class="peq">antes <s>${fmt(p.a)}</s></span>` : ""}</div>
+        <${Etiquetas} p=${p} />
+        ${p.mo && html`<${Naturalidad} C=${C} p=${p} />`}
+        ${p.ch > 0 && html`<p class="peq">Acumulas ${fmt(p.ch)} en tu Cheque Crece por cada unidad${AJ.socio ? `: con eso te sale a ${fmt(precioEf(p))}` : " si eres socio de Consum"}.</p>`}
+        ${p.pk ? html`<p class="peq">Comprando ${p.pk[0]}, cada uno sale a ${fmt(p.pk[1])}.</p>` : ""}
+        <div style=${{ display: "grid", gap: 10 }}>
+          ${n ? html`<div style=${{ display: "flex", gap: 12, alignItems: "center" }}><${Cantidad} n=${n} nombre=${p.n} mas=${() => poner(p, n + 1)} menos=${() => poner(p, n - 1)} />
+              <span class="peq">${n === 1 ? "En tu lista" : `${n} en tu lista`}</span></div>`
+            : html`<button class="btn ancho" onClick=${() => poner(p, 1)}>${Icono.mas} Añadir a la lista</button>`}
+          ${p.url && html`<a class="btn sec ancho" href=${p.url} target="_blank" rel="noopener" style=${{ textDecoration: "none" }}>Ver en ${dominio}</a>`}
+        </div>
+        ${iguales.length > 0 && html`<section style=${{ display: "grid", gap: 10 }}><h3 class="h3">El mismo producto en otros súper</h3>
+          <ul class="filas tarjeta">${iguales.map(x => html`<${FilaProducto} key=${x.k} C=${C} p=${x} n=${cantidadDe(x.k)} poner=${poner} abrir=${abrir} aj=${AJ} />`)}</ul></section>`}
+        ${otras.length > 0 && html`<section style=${{ display: "grid", gap: 10 }}><h3 class="h3">Alternativas en otros súper</h3>
+          <p class="peq">Lo ${AJ.saludable ? "más natural y barato" : "más barato"} del mismo tipo, para la misma cantidad. Si una tienda no lo tiene, lo más parecido que vende.</p>
+          <ul class="filas tarjeta">${otras.map(e => html`<${FilaProducto} key=${e.p.k} C=${C} p=${e.p} n=${cantidadDe(e.p.k)} poner=${poner} abrir=${abrir} aj=${AJ}
+            extra=${html`<span class="peq">${e.n > 1 ? `${e.n} × para la misma cantidad · ` : ""}${fmt(e.coste)}${e.menosNatural ? " · menos natural" : ""}${e.como === "parecido" ? " · parecido" : e.como === "equivalente" ? " · lo mismo con otro nombre" : e.como === "sustituto" ? " · sustituto: no hay uno igual" : ""}</span>`} />`)}</ul></section>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ------------------------------------------------------------------ app */
+const VISTAS = ["buscar", "lista", "comprar", "ajustes"];
+const NAV = [["buscar", "Buscar", "inicio"], ["lista", "Mi lista", "lista"], ["comprar", "Comprar", "carro"], ["ajustes", "Ajustes", "ajustes"]];
+const TITULOS = { buscar: "¿Qué compramos hoy?", lista: "Mi lista", comprar: "Dónde comprar", ajustes: "Ajustes" };
+
+function PanelCompra({ C, estado, r, poner, abrir, ir }) {
+  const items = estado.items;
+  return html`<aside class="panel" aria-labelledby="panel-tit"><div class="panel-in">
+    <div class="seccion-cab"><h2 class="h3" id="panel-tit">Tu compra</h2><span class="peq">${items.length} ${items.length === 1 ? "producto" : "productos"}</span></div>
+    ${!items.length ? html`<p class="peq">Pulsa + en cualquier producto y aquí verás tu lista y dónde te sale más barata.</p>` : html`
+      <${ResumenPlan} C=${C} r=${r} ir=${ir} compacto=${true} />
+      <ul class="filas">${items.slice(0, 30).map(it => {
+        const p = C.porClave.get(it.k);
+        if (!p) return null;
+        return html`<li key=${it.k} class="fila"><button class="abrir" onClick=${() => abrir(p)} aria-label=${`Ver ${p.n}`}>
+          <${Foto} C=${C} p=${p} t=${44} /><span class="info"><span class="n" style=${{ fontSize: 14 }}>${p.n}</span>
+          <span class="meta"><${Logo} C=${C} s=${p.s} t=${16} /><span class="num">${fmt(precioEf(p))}</span></span></span></button>
+          <${Cantidad} n=${it.q} nombre=${p.n} mas=${() => poner(p, it.q + 1)} menos=${() => poner(p, it.q - 1)} /></li>`;
+      })}</ul>
+      <button class="btn ancho" onClick=${() => ir("comprar")}>${Icono.carro} Ver dónde comprar</button>`}
+  </div></aside>`;
+}
+
+function App() {
+  const [C, setC] = useState(null);
+  const [error, setError] = useState(false);
+  const [vista, setVista] = useState(() => VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "buscar");
+  const [q, setQ] = useState("");
+  const [det, setDet] = useState(null);
+  const [aviso, setAviso] = useState(null); // { texto, deshacer }
+  const [estado, cambiar, sync] = useEstado();
+  const aj = useMemo(() => mezclarAjustes(estado.ajustes), [estado.ajustes]);
+  AJ = aj;
+
+  useEffect(() => {
+    fetch("catalogo.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(d => setC(preparar(d))).catch(() => setError(true));
+    const h = () => { const v = location.hash.slice(1); if (VISTAS.includes(v)) setVista(v); };
+    addEventListener("hashchange", h);
+    return () => removeEventListener("hashchange", h);
+  }, []);
+  const ir = useCallback(v => { setVista(v); setDet(null); try { history.replaceState(null, "", "#" + v); } catch (e) {} window.scrollTo(0, 0); }, []);
+  const cantidades = useMemo(() => new Map(estado.items.map(it => [it.k, it.q])), [estado.items]);
+  const cantidadDe = useCallback(k => cantidades.get(k) || 0, [cantidades]);
+  const avisar = useCallback((texto, deshacer) => setAviso({ texto, deshacer, id: Date.now() }), []);
+  // fija la cantidad de un producto en la lista (0 lo quita, con opción de deshacer)
+  const poner = useCallback((p, n) => {
+    let previo = null;
+    cambiar(e => {
+      const ya = e.items.find(it => it.k === p.k);
+      previo = e.items;
+      if (n <= 0) return { ...e, items: e.items.filter(it => it.k !== p.k) };
+      if (ya) return { ...e, items: e.items.map(it => it.k === p.k ? { ...it, q: n, h: false } : it) };
+      return { ...e, items: [...e.items, { k: p.k, n: p.n, q: n, h: false }] };
+    });
+    if (n <= 0) avisar(`Quitado: ${p.n}`, () => cambiar(e => ({ ...e, items: previo })));
+    else if (!cantidades.get(p.k)) avisar(`Añadido: ${p.n}`);
+  }, [cambiar, avisar, cantidades]);
+  useEffect(() => { if (!aviso) return; const t = setTimeout(() => setAviso(null), aviso.deshacer ? 4500 : 2200); return () => clearTimeout(t); }, [aviso]);
+
+  const activas = useMemo(() => new Set(estado.activas), [estado.activas]);
+  const plan = useMemo(() => C ? planificar(C, estado.items, activas, estado.max, !!estado.envio) : null, [C, estado.items, activas, estado.max, estado.envio, aj]);
+  const otro = useMemo(() => C && vista === "comprar" ? planificar(C, estado.items, activas, 4, !estado.envio) : null, [C, estado.items, activas, estado.envio, aj, vista]);
+
+  const fecha = C ? new Date(C.fecha + "T12:00:00").toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long" }) : null;
+  const pend = estado.items.length;
+  const verBarra = C && pend > 0 && vista !== "comprar" && !det && plan && plan.plan;
+  const navBoton = (v, t, ic, cls) => html`<button key=${v} class=${cls} aria-current=${vista === v ? "page" : undefined} onClick=${() => ir(v)}>${Icono[ic]}<span>${t}</span>
+    ${v === "lista" && pend > 0 && html`<span class="badge" aria-label=${`${pend} productos`}>${pend}</span>`}</button>`;
+  return html`<${React.Fragment}>
+    <a class="salto" href="#contenido">Saltar al contenido</a>
+    <div class="marco">
+      <nav class="lateral" aria-label="Secciones de la app">
+        <div class="marca-lat"><span class="marca-icono">${Icono.etiqueta}</span><b>Comparador de supermercados</b></div>
+        ${NAV.map(([v, t, ic]) => navBoton(v, t, ic, "nav-lat"))}
+        <div class="pie">
+          <div class="super-fila">${[0, 1, 2, 3].map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${30} />`)}</div>
+          <p class="peq">${C ? `Precios del ${fecha}` : "Cargando precios…"}</p>
+          <p class="peq">${sync === "nube" ? "Tu lista se guarda en tu cuenta" : "Tu lista se guarda en este dispositivo"}</p>
+        </div>
+      </nav>
+      <div class="centro">
+        <header class="cab">
+          <h1 class="titulo-grande">${TITULOS[vista]}</h1>
+          ${vista === "buscar" && html`<p class="sub">${C ? html`${C.P.length.toLocaleString("es-ES")} productos · precios del ${fecha}` : error ? "No se han podido cargar los precios" : "Cargando precios…"}</p>`}
+        </header>
+        ${vista === "buscar" && html`<div class="buscador-wrap"><div class="buscador" role="search">
+          <span class="lupa">${Icono.lupa}</span>
+          <label for="q" class="sr">Buscar productos</label>
+          <input id="q" name="q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Leche, pavo, huevos…"
+            value=${q} onChange=${e => setQ(e.target.value)} />
+          ${q && html`<button class="borrar" aria-label="Borrar búsqueda" onClick=${() => { setQ(""); document.getElementById("q")?.focus(); }}>${Icono.x}</button>`}
+        </div></div>`}
+        <main id="contenido">
+          ${error ? html`<div class="vacio"><h2 class="h2">No se han podido cargar los precios</h2><p>Comprueba tu conexión y vuelve a abrir la app.</p></div>`
+            : !C ? html`<div class="seccion" aria-busy="true" aria-label="Cargando precios…"><div class="esq" style=${{ height: 44 }}></div><div class="rejilla-sec">${[1, 2, 3, 4, 5, 6].map(i => html`<div key=${i} class="esq" style=${{ height: 132 }}></div>`)}</div></div>`
+            : vista === "buscar" ? html`<${Buscar} C=${C} q=${q} setQ=${setQ} cantidadDe=${cantidadDe} poner=${poner} abrir=${setDet} aj=${aj} />`
+            : vista === "lista" ? html`<${Lista} C=${C} estado=${estado} cambiar=${cambiar} abrir=${setDet} ir=${ir} poner=${poner} r=${plan} />`
+            : vista === "comprar" ? html`<${Comprar} C=${C} estado=${estado} cambiar=${cambiar} abrir=${setDet} ir=${ir} avisar=${avisar} r=${plan} otro=${otro} />`
+            : html`<${Ajustes} C=${C} estado=${estado} cambiar=${cambiar} />`}
+        </main>
+      </div>
+      ${C && html`<${PanelCompra} C=${C} estado=${estado} r=${plan} poner=${poner} abrir=${setDet} ir=${ir} />`}
+    </div>
+    ${verBarra && html`<button class="barra-compra" onClick=${() => ir("comprar")} aria-label=${`Ver dónde comprar tus ${pend} productos: desde ${fmt(plan.plan.total)}`}>
+      <span class="bolsa">${pend}</span>
+      <span style=${{ minWidth: 0 }}><span class="t1" style=${{ display: "block" }}>Desde ${fmt(plan.plan.total)}</span>
+        <span class="t2">${plan.plan.usadas.map(s => html`<${Logo} key=${s} C=${null} s=${s} t=${16} />`)}${plan.plan.usadas.length > 1 ? "repartiendo la compra" : "en un solo súper"}</span></span>
+      <span class="ir">Ver${Icono.flecha}</span>
+    </button>`}
+    <nav class="tabbar" aria-label="Secciones de la app"><div class="tabbar-in">${NAV.map(([v, t, ic]) => navBoton(v, t, ic, "tab"))}</div></nav>
+    ${det && C && html`<${Detalle} C=${C} p=${det} cerrar=${() => setDet(null)} poner=${poner} cantidadDe=${cantidadDe} abrir=${setDet} />`}
+    <div class="sr" aria-live="polite">${aviso ? aviso.texto : ""}</div>
+    ${aviso && html`<div class=${"toast" + (verBarra ? "" : " sin-barra")} key=${aviso.id}><span aria-hidden="true">${aviso.texto}</span>
+      ${aviso.deshacer && html`<button onClick=${() => { aviso.deshacer(); setAviso(null); }}>Deshacer</button>`}</div>`}
+  </${React.Fragment}>`;
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(html`<${App} />`);
+</script>
+
+</body></html>
