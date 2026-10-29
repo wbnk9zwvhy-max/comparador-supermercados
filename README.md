@@ -1,8 +1,9 @@
 # Comparador de supermercados
 
-App web que compara Mercadona, Consum, DIA y LIDL. Publicada como Artifact de claude.ai
-(https://claude.ai/artifact/9Au9HZhPtGrPp3oLXm6S91); la actualización diaria puede hacerse sin Claude con
-GitHub Actions y GitHub Pages (ver «Actualización diaria»).
+App web que compara Mercadona, Consum y LIDL (y DIA cuando se ejecuta desde un sitio al que DIA responda).
+Web: https://wbnk9zwvhy-max.github.io/comparador-supermercados/, actualizada cada día con GitHub Actions
+(ver «Actualización diaria»). El antiguo Artifact de claude.ai (https://claude.ai/artifact/9Au9HZhPtGrPp3oLXm6S91)
+ya no se actualiza desde el 29/10/2026: su tarea diaria en claude.ai está desactivada.
 
 ## Puesta en marcha
 
@@ -94,15 +95,13 @@ Se regeneran y no van en git: `fotos/`, `app/catalogo.json`, `app/miniaturas/`, 
 precios → ingredientes y OCR → fotos nuevas → construir → **pruebas con los datos del día** → publicar en GitHub Pages.
 
 - Si un súper falla, se usan sus datos del día anterior (rama `datos`, que se reescribe cada día sin historial).
-- **DIA no responde a los servidores de GitHub** (antibots): la web de GitHub Pages sale sin DIA. El artifact sí lo tiene,
-  porque su tarea diaria en claude.ai lo trae desde la nube.
+- **DIA no responde a los servidores de GitHub** (antibots): la web sale sin DIA. Ramón eligió quedarse solo con GitHub.
 - El OCR de fotos tiene un tope de 25 min (`OCR_MINUTOS`); lo que no da tiempo queda para el día siguiente.
 - Si las pruebas fallan, no se publica: la web sigue con los datos de ayer.
 - Las fotos se guardan en la caché de Actions (la primera vez se bajan todas, ~20.000).
 - En GitHub Pages la lista de cada persona se guarda en su navegador (`localStorage`); en el artifact, en la nube de claude.ai.
 
 Repositorio: https://github.com/wbnk9zwvhy-max/comparador-supermercados · Web: https://wbnk9zwvhy-max.github.io/comparador-supermercados/
-Para el artifact, publicar `app/` con Claude cuando se quiera (no hace falta a diario).
 
 ## Formato de catalogo.json (lo lee `preparar()`)
 
