@@ -21,6 +21,9 @@ jobs:
   actualizar:
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    env:
+      PYTHONUNBUFFERED: "1"   # que el registro se vea al momento
+      OCR_MINUTOS: "25"       # tope del OCR de fotos: el resto queda para el día siguiente
     steps:
       - uses: actions/checkout@v4
 

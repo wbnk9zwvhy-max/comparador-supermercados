@@ -225,6 +225,8 @@ TESSDATA = os.path.expanduser("~/.cache/tessdata")
 # 2: imagen con contraste automático y enfoque antes de leerla (en una muestra de 80 productos de Consum,
 # 8 lecturas aceptadas frente a 2). Lo que se leyó con una versión anterior y no salió se reintenta una vez.
 OCR_VERSION = 2
+# tope de tiempo del OCR: lo que no dé tiempo a leer se queda pendiente para el día siguiente
+OCR_MINUTOS = float(os.environ.get("OCR_MINUTOS", "30"))
 SIN_INGREDIENTES = {"limpieza", "higiene", "otros", "mascotas"}
 
 RX_INICIO = re.compile(r"\bingred[il1]ent[eo]s?\b\s*[:;.,]?", re.I)
@@ -263,7 +265,9 @@ def ocr(img_bytes):
     buf = io.BytesIO()
     im.save(buf, "PNG")
     r = subprocess.run(["tesseract", "stdin", "stdout", "-l", "spa", "--psm", "3"], input=buf.getvalue(),
-                       capture_output=True, env={**os.environ, "TESSDATA_PREFIX": TESSDATA}, timeout=120)
+                       capture_output=True, timeout=120,
+                       # un hilo por tesseract: ya van varios en paralelo y, si no, en Linux se pisan (OpenMP) y cada foto tarda minutos
+                       env={**os.environ, "TESSDATA_PREFIX": TESSDATA, "OMP_THREAD_LIMIT": "1"})
     return r.stdout.decode("utf-8", "replace")
 
 
@@ -377,6 +381,8 @@ def ocr_main():
 
     def uno(t):
         k, x, fn = t
+        if time.time() > limite:
+            return k, None
         mejor = (None, 0)
         for url in fn(s, x)[:6]:
             try:
@@ -397,10 +403,15 @@ def ocr_main():
                 break
         return k, mejor
 
-    aceptados = dudosos = 0
+    aceptados = dudosos = sin_tiempo = 0
     t0 = time.time()
+    limite = t0 + OCR_MINUTOS * 60
     with ThreadPoolExecutor(max_workers=min(6, max(2, os.cpu_count() or 2))) as ex:  # cada hilo descarga fotos: máximo 6
-        for i, (k, (txt, q)) in enumerate(ex.map(uno, tareas), 1):
+        for i, (k, lectura) in enumerate(ex.map(uno, tareas), 1):
+            if lectura is None:
+                sin_tiempo += 1
+                continue
+            txt, q = lectura
             e = cache.get(k) or {"t": None}
             e["ocr"] = HOY
             e["ov"] = OCR_VERSION
@@ -420,7 +431,8 @@ def ocr_main():
         json.dump(cache, f, ensure_ascii=False, separators=(",", ":"))
     os.replace(ruta + ".tmp", ruta)
     print(f"OCR: {aceptados} con ingredientes leídos de la foto, {dudosos} dudosos descartados, "
-          f"{len(tareas) - aceptados - dudosos} sin lista legible")
+          f"{len(tareas) - aceptados - dudosos - sin_tiempo} sin lista legible"
+          + (f", {sin_tiempo} para mañana (tope de {OCR_MINUTOS:g} min)" if sin_tiempo else ""))
 
 
 
