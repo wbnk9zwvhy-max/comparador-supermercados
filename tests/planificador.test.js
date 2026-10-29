@@ -48,7 +48,9 @@ test("cestas al azar: la propiedad se mantiene", () => {
       for (let k = 2; k <= 4; k++) {
         const a = r.porMax[k - 1], b = r.porMax[k];
         if (!a || !b) continue;
-        assert.ok(b.faltan.length < a.faltan.length || (b.faltan.length === a.faltan.length && b.total <= a.total + 0.005),
+        // puede salir algo más caro solo para evitar sustitutos: cuentan 0,15 € + 5 % más (coste) para elegirse solo si ahorran de verdad
+        assert.ok(b.faltan.length < a.faltan.length || (b.faltan.length === a.faltan.length &&
+          (b.total <= a.total + 0.005 || b.coste <= a.coste + 0.005)),
           `caso ${caso} envío=${envio}: hasta ${k} = ${b.total} € > hasta ${k - 1} = ${a.total} €`);
       }
     }
