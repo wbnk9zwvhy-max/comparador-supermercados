@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { cargar } = require("./cargar");
 
-const { C, g, ajustes } = cargar();
+const { C, g, ajustes, hay } = cargar();
 const equivalente = g("equivalente"), nivelDe = g("nivelDe"), sinDatos = g("sinDatos");
 const S = Object.fromEntries(C.tiendas.map((t, i) => [t, i]));
 const producto = (nombre, tienda) => {
@@ -18,7 +18,7 @@ test.beforeEach(() => ajustes({}));
 test("Ternera Gallega de Guisar (Consum) → equivalentes en Mercadona, DIA y LIDL", () => {
   const ref = producto("Ternera Gallega de Guisar", "Consum");
   const esperado = { Mercadona: /trozo de vacuno para cocido/i, DIA: /carne de vacuno en tacos/i, LIDL: /taco de vacuno para guisar/i };
-  for (const [t, rx] of Object.entries(esperado)) {
+  for (const [t, rx] of Object.entries(esperado).filter(([t]) => hay(t))) {
     const e = en(ref, t);
     assert.ok(e, t);
     assert.match(e.p.n, rx, t);
@@ -28,9 +28,9 @@ test("Ternera Gallega de Guisar (Consum) → equivalentes en Mercadona, DIA y LI
 
 test("Pechuga 92% pavo (Mercadona) → Bonnatur 95% (Consum), Elpozo 93% (DIA) y LIDL con aviso", () => {
   const ref = producto("Pechuga 92% pavo", "Mercadona");
-  const c = en(ref, "Consum"), d = en(ref, "DIA"), l = en(ref, "LIDL");
+  const c = en(ref, "Consum"), l = en(ref, "LIDL");
   assert.match(c.p.n, /bonnatur 95/i); assert.ok(!c.menosNatural);
-  assert.match(d.p.n, /pechuga de pavo 93% elpozo/i); assert.ok(!d.menosNatural);
+  if (hay("DIA")) { const d = en(ref, "DIA"); assert.match(d.p.n, /pechuga de pavo 93% elpozo/i); assert.ok(!d.menosNatural); }
   assert.ok(l && l.menosNatural, "en LIDL debe avisar «menos natural»");
 });
 
@@ -48,7 +48,8 @@ test("auditoría: 0 sustituciones menos naturales sin aviso (con y sin modo sano
       const peor = sinDatos(e.p) || e.p.sa < ref.sa - (ref.sa % 10) || (nivelDe(e.p) === nivelDe(ref) && e.p.sa % 10 < ref.sa % 10);
       if (peor && !e.menosNatural) silencio.push(`${ref.n} → ${e.p.n}`);
     }
-    assert.ok(tot > 300, `pocas sustituciones auditadas (${tot})`);
+    const minimo = 100 * (C.tiendas.filter(hay).length - 1);  // 300 con los cuatro súper
+    assert.ok(tot > minimo, `pocas sustituciones auditadas (${tot})`);
     assert.deepEqual(silencio.slice(0, 5), [], `modo sano=${saludable}`);
   }
 });
@@ -56,7 +57,7 @@ test("auditoría: 0 sustituciones menos naturales sin aviso (con y sin modo sano
 test("«Huevos» de Mercadona (sin formato): se estima la cantidad y no se cambia por media docena ni por huevos de codorniz", () => {
   const ref = C.P.find(p => p.n === "Huevos" && p.s === S.Mercadona);
   assert.equal(ref.q, null);
-  for (const t of ["Consum", "DIA"]) {
+  for (const t of ["Consum", "DIA"].filter(hay)) {
     const e = en(ref, t);
     assert.ok(e && e.estimada, t);
     assert.doesNotMatch(e.p.n, /codorniz/i, t);
@@ -79,5 +80,5 @@ test("pienso, comida de bebé y productos infantiles nunca sustituyen a una comp
 test("marcas fuertes: Oreo se cambia por galletas rellenas genéricas donde no hay Oreo", () => {
   const ref = producto("Galletas Oreo Rellenas de Crema", "Consum");
   assert.match(en(ref, "Mercadona").p.n, /galletas rellenas/i);
-  assert.match(en(ref, "DIA").p.n, /oreo/i);
+  if (hay("DIA")) assert.match(en(ref, "DIA").p.n, /oreo/i);
 });

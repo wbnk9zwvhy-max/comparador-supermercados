@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { cargar } = require("./cargar");
 
-const { C, g, ajustes } = cargar();
+const { C, g, ajustes, hay } = cargar();
 const buscar = g("buscar"), intencion = g("intencion"), planificar = g("planificar");
 
 function elegir(q, s) {
@@ -12,12 +12,13 @@ function elegir(q, s) {
   return l[0] && l[0].p;
 }
 const LISTA = [["jamón serrano", 2], ["leche entera", 0], ["huevos", 0], ["aceite de oliva virgen extra", 1], ["papel higiénico", 0], ["tomate frito", 0], ["yogur natural", 1], ["pechuga de pollo", 0], ["plátano", 2], ["café molido", 1], ["detergente", 0], ["atún", 2], ["queso curado", 0], ["pan de molde", 1], ["cerveza", 0], ["patatas", 0], ["manzana", 0], ["agua mineral", 0], ["galletas", 2], ["arroz redondo", 0]];
-const ITEMS = LISTA.map(([q, s]) => elegir(q, s)).filter(Boolean)
-  .map((p, i) => ({ k: p.k, n: p.n, q: LISTA[i][0] === "leche entera" ? 6 : LISTA[i][0] === "cerveza" ? 12 : 1 }));
+const ITEMS = LISTA.map(([q, s]) => [q, elegir(q, s)]).filter(([, p]) => p)
+  .map(([q, p]) => ({ k: p.k, n: p.n, q: q === "leche entera" ? 6 : q === "cerveza" ? 12 : 1 }));
 
 test.beforeEach(() => ajustes({}));
 
-test("la lista de prueba encuentra sus 20 productos", () => assert.equal(ITEMS.length, 20));
+const ESPERADOS = LISTA.filter(([, s]) => hay(C.tiendas[s])).length;  // 20 con los cuatro súper
+test("la lista de prueba encuentra todos sus productos", () => assert.equal(ITEMS.length, ESPERADOS));
 
 for (const envio of [false, true]) for (const n of [5, 20]) {
   test(`«Hasta k súper» nunca sube al permitir más (envío=${envio}, ${n} productos)`, () => {

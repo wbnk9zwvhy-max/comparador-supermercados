@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { cargar } = require("./cargar");
 
-const { C, g, ajustes } = cargar();
+const { C, g, ajustes, hay } = cargar();
 const buscar = g("buscar"), intencion = g("intencion"), comparar = g("comparar");
 
 function primeraCategoria(q) {
@@ -22,7 +22,7 @@ test("«leche de almendras» → Bebidas vegetales, comparativa «Bebida de alme
   const { cat, comp, tiendas } = comparativa("leche de almendras");
   assert.equal(cat.nombre, "Bebidas vegetales");
   assert.equal(comp.titulo, "Bebida de almendras");
-  for (const t of ["Mercadona", "Consum", "DIA"]) assert.ok(tiendas.includes(t), t);
+  for (const t of ["Mercadona", "Consum", "DIA"].filter(hay)) assert.ok(tiendas.includes(t), t);
 });
 
 for (const q of ["limón", "limones"]) test(`«${q}» → Fruta primero, no refrescos`, () => {
@@ -46,13 +46,13 @@ for (const q of ["gulas", "delicias del mar"]) test(`«${q}» → Surimi y gulas
   assert.equal(cat.clave, "p_surimi");
   assert.match(nombres.Mercadona, /delicias del mar/i);
   assert.match(nombres.Consum, /la gula del norte/i);
-  assert.match(nombres.DIA, /suced[aá]neo de angulas/i);
+  if (hay("DIA")) assert.match(nombres.DIA, /suced[aá]neo de angulas/i);
 });
 
 test("«ternera para guisar» → Ternera y vacuno en los 4 súper", () => {
   const { cat, tiendas } = comparativa("ternera para guisar");
   assert.equal(cat.clave, "c_vacuno");
-  assert.deepEqual([...tiendas].sort(), ["Consum", "DIA", "LIDL", "Mercadona"]);
+  assert.deepEqual([...tiendas].sort(), ["Consum", "DIA", "LIDL", "Mercadona"].filter(hay));
 });
 
 test("una palabra solo es igual si coincide su raíz: «limón» no es «limonada», «sal» no es «salsa»", () => {

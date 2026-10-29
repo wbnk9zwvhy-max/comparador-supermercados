@@ -46,7 +46,7 @@ jobs:
         run: ci/datos.sh traer
 
       - name: Fotos ya descargadas
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: fotos
           key: fotos-${{ github.run_id }}
@@ -57,6 +57,13 @@ jobs:
 
       - name: Ingredientes, fotos y app
         run: ci/actualizar.sh app
+
+      - name: Guardar las fotos (aunque luego fallen las pruebas)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: fotos
+          key: fotos-${{ github.run_id }}
 
       - name: Pruebas con los datos de hoy
         run: npm run test:hoy && npm run test:py

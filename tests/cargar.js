@@ -27,7 +27,10 @@ function cargar() {
   const g = ctx.__global;
   const C = g("preparar")(datos);
   ctx.__ajustes({});
-  cache = { ctx, C, g, ajustes: ctx.__ajustes, datos };
+  // súper con productos en este catálogo: en GitHub Actions DIA no responde y sus casos se saltan
+  const conProductos = new Set(C.P.map(p => p.s));
+  const hay = nombre => conProductos.has(C.tiendas.indexOf(nombre));
+  cache = { ctx, C, g, ajustes: ctx.__ajustes, datos, hay };
   return cache;
 }
 
