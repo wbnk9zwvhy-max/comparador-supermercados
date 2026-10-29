@@ -94,12 +94,14 @@ Se regeneran y no van en git: `fotos/`, `app/catalogo.json`, `app/miniaturas/`, 
 precios → ingredientes y OCR → fotos nuevas → construir → **pruebas con los datos del día** → publicar en GitHub Pages.
 
 - Si un súper falla, se usan sus datos del día anterior (rama `datos`, que se reescribe cada día sin historial).
+- **DIA no responde a los servidores de GitHub** (antibots): la web de GitHub Pages sale sin DIA. El artifact sí lo tiene,
+  porque su tarea diaria en claude.ai lo trae desde la nube.
+- El OCR de fotos tiene un tope de 25 min (`OCR_MINUTOS`); lo que no da tiempo queda para el día siguiente.
 - Si las pruebas fallan, no se publica: la web sigue con los datos de ayer.
 - Las fotos se guardan en la caché de Actions (la primera vez se bajan todas, ~20.000).
 - En GitHub Pages la lista de cada persona se guarda en su navegador (`localStorage`); en el artifact, en la nube de claude.ai.
 
-Para activarla: crear el repositorio en GitHub, subir esta carpeta, y en *Settings → Pages* elegir
-*Source: GitHub Actions*. La primera ejecución se lanza desde *Actions → Actualizar precios → Run workflow*.
+Repositorio: https://github.com/wbnk9zwvhy-max/comparador-supermercados · Web: https://wbnk9zwvhy-max.github.io/comparador-supermercados/
 Para el artifact, publicar `app/` con Claude cuando se quiera (no hace falta a diario).
 
 ## Formato de catalogo.json (lo lee `preparar()`)
