@@ -58,7 +58,7 @@ function App() {
   }, [cambiar, avisar, cantidades]);
   useEffect(() => { if (!aviso) return; const t = setTimeout(() => setAviso(null), aviso.deshacer ? 4500 : 2200); return () => clearTimeout(t); }, [aviso]);
 
-  const activas = useMemo(() => new Set(estado.activas), [estado.activas]);
+  const activas = useMemo(() => new Set(estado.activas.filter(s => !C || C.vivas.includes(s))), [estado.activas, C]);
   const plan = useMemo(() => C ? planificar(C, estado.items, activas, estado.max, !!estado.envio) : null, [C, estado.items, activas, estado.max, estado.envio, aj]);
   const otro = useMemo(() => C && vista === "comprar" ? planificar(C, estado.items, activas, 4, !estado.envio) : null, [C, estado.items, activas, estado.envio, aj, vista]);
 
@@ -74,7 +74,7 @@ function App() {
         <div class="marca-lat"><span class="marca-icono">${Icono.etiqueta}</span><b>Comparador de supermercados</b></div>
         ${NAV.map(([v, t, ic]) => navBoton(v, t, ic, "nav-lat"))}
         <div class="pie">
-          <div class="super-fila">${[0, 1, 2, 3].map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${30} />`)}</div>
+          <div class="super-fila">${(C ? C.vivas : [0, 1, 2, 3]).map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${30} />`)}</div>
           <p class="peq">${C ? `Precios del ${fecha}` : "Cargando precios…"}</p>
           <p class="peq">${sync === "nube" ? "Tu lista se guarda en tu cuenta" : "Tu lista se guarda en este dispositivo"}</p>
         </div>

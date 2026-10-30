@@ -40,7 +40,7 @@ function Naturalidad({ C, p }) {
   const [abierto, setAbierto] = useState(false);
   const nv = nivelDe(p);
   const titulo = sinDatos(p) ? "Sin datos de ingredientes" : NIVELES[nv];
-  return html`<section class="tarjeta natural" aria-labelledby="nat-tit">
+  return html`<section class=${"tarjeta natural" + (sinDatos(p) ? "" : " nivel-" + nv)} aria-labelledby="nat-tit">
     <div class="cab-nat"><h3 class="h3" id="nat-tit">${titulo}</h3>${!sinDatos(p) && html`<${Nivel} p=${p} />`}</div>
     <p class="peq">${sinDatos(p) ? (p.s === 3 ? "LIDL no publica sus ingredientes y este producto no está en Open Food Facts." : "Ni la tienda ni Open Food Facts publican sus ingredientes, y no se han podido leer en las fotos del envase.") + " En el modo saludable va por detrás de lo que se sabe que es natural o poco procesado." : p.mo}</p>
     ${d && d[0] && html`<p class="ingr"><b>Ingredientes${d[5] === "ocr" ? " (leídos de la foto del envase)" : d[5] === "off" ? " (de Open Food Facts)" : ""}: </b><${Resaltado} texto=${d[0]} /></p>`}

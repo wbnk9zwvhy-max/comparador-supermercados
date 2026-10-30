@@ -1,4 +1,6 @@
 /* ------------------------------------------------------------------ ajustes */
+// «Mercadona, Consum y LIDL»
+const lista = xs => xs.length > 1 ? xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1] : xs.join("");
 function Ajustes({ C, estado, cambiar }) {
   const aj = mezclarAjustes(estado.ajustes);
   const fijar = cambio => cambiar(e => ({ ...e, ajustes: { ...mezclarAjustes(e.ajustes), ...cambio } }));
@@ -27,7 +29,7 @@ function Ajustes({ C, estado, cambiar }) {
     </section>
     <section class="seccion" aria-labelledby="env-tit"><h2 class="h2" id="env-tit">Envío a domicilio</h2>
       <p class="peq">Tarifas publicadas por cada cadena. Cambian según el código postal: corrígelas si en tu zona son otras.</p>
-      <div class="tarjeta grupo-ios">${C.tiendas.map((t, s) => {
+      <div class="tarjeta grupo-ios">${C.vivas.map(s => [C.tiendas[s], s]).map(([t, s]) => {
         const e = aj.envios[s];
         return html`<div key=${t}>
           <${Interruptor} id=${`env-${s}`} activo=${e.activo} cambiar=${v => fijarEnvio(s, "activo", v)} titulo=${html`<${Logo} C=${null} s=${s} t=${26} /><span translate="no">${t}</span>`}
@@ -44,8 +46,8 @@ function Ajustes({ C, estado, cambiar }) {
     </section>
     <section class="seccion" aria-labelledby="dat-tit"><h2 class="h2" id="dat-tit">Sobre los datos</h2>
       <div class="tarjeta" style=${{ padding: 16, display: "grid", gap: 10 }}>
-        <div class="super-fila">${C.tiendas.map((t, s) => html`<${Logo} key=${t} C=${C} s=${s} t=${36} />`)}</div>
-        <p class="peq">Precios de las webs de Mercadona, Consum, DIA y LIDL, actualizados cada mañana. Los de Mercadona son los de su almacén de Valencia; los de las demás cadenas, los que muestra su web por defecto. LIDL solo publica online una parte de su surtido.</p>
+        <div class="super-fila">${C.vivas.map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${36} />`)}</div>
+        <p class="peq">Precios de las webs de ${lista(C.vivas.map(s => C.tiendas[s]))}, actualizados cada mañana.${C.vivas.length < C.tiendas.length ? ` Hoy no hay precios de ${lista(C.tiendas.filter((_, s) => !C.vivas.includes(s)))}: su web no ha respondido.` : ""} Los de Mercadona son los de su almacén de Valencia; los de las demás cadenas, los que muestra su web por defecto. LIDL solo publica online una parte de su surtido.</p>
       </div>
     </section>
   </div>`;

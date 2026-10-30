@@ -155,6 +155,11 @@ p { margin: 0; text-wrap: pretty; }
 .nivel i { width: 14px; height: 6px; border-radius: 3px; background: var(--relleno); }
 .nivel i.on { background: var(--sano); }
 .nivel.bajo i.on { background: var(--cheque); }
+/* el nivel de naturalidad, de un vistazo: verde lo natural, naranja con aditivos, rojo lo ultraprocesado */
+.natural.nivel-4 .h3, .natural.nivel-3 .h3 { color: var(--sano); }
+.natural.nivel-1 .h3 { color: var(--cheque); }
+.natural.nivel-0 .h3, .natural.nivel-0 .nivel i.on { color: var(--oferta); }
+.natural.nivel-0 .nivel i.on { background: var(--oferta); }
 .natural { padding: 14px 16px; display: grid; gap: 8px; }
 .natural .cab-nat { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .natural .ingr { font-size: 13px; color: var(--tinta-2); line-height: 1.45; }
@@ -171,6 +176,9 @@ p { margin: 0; text-wrap: pretty; }
 /* selector de cantidad: + que se abre a − 1 + */
 .cantidad { display: inline-flex; align-items: center; height: 40px; border-radius: 20px; background: var(--primario); color: var(--primario-tinta);
   box-shadow: var(--sombra-2); overflow: hidden; }
+/* ya en la lista: control discreto, que no compita con el producto (el + oscuro queda para añadir) */
+.cantidad.abierta { background: var(--relleno); color: var(--tinta); box-shadow: inset 0 0 0 1px var(--linea); }
+.pcard .cantidad.abierta { background: var(--tarjeta); box-shadow: var(--sombra-2), inset 0 0 0 1px var(--linea); }
 .cantidad button { width: 40px; height: 40px; border: 0; background: none; color: inherit; display: grid; place-items: center; transition: transform 120ms var(--ease-out); }
 .cantidad button:active { transform: scale(.88); }
 .cantidad button svg { width: 18px; height: 18px; }
@@ -265,7 +273,10 @@ p { margin: 0; text-wrap: pretty; }
 .logos-sel { display: flex; gap: 10px; flex-wrap: wrap; }
 .logo-sel { border: 0; background: var(--tarjeta); border-radius: 16px; padding: 8px 12px 8px 8px; display: inline-flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px;
   box-shadow: var(--sombra-1), inset 0 0 0 1px var(--linea); transition: transform 120ms var(--ease-out), opacity 150ms ease; }
-.logo-sel[aria-pressed="true"] { box-shadow: var(--sombra-1), inset 0 0 0 2px var(--primario); }
+/* elegido: relleno suave y una marca ✓; sin elegir: atenuado y en gris */
+.logo-sel[aria-pressed="true"] { background: var(--relleno); box-shadow: inset 0 0 0 1.5px var(--tinta-3); }
+.logo-sel .marca-sel { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 10px; background: var(--primario); color: var(--primario-tinta); }
+.logo-sel .marca-sel svg { width: 12px; height: 12px; }
 .logo-sel[aria-pressed="false"] { opacity: .5; }
 .logo-sel[aria-pressed="false"] .logo { filter: grayscale(1); }
 .logo-sel:active { transform: scale(.96); }
@@ -481,7 +492,9 @@ function preparar(d) {
   tiposPorSec.forEach(l => l.sort(orden));
   cats.forEach(c => c.tipos.sort(orden));
   const catsPorSec = d.secciones.map((_, s) => cats.filter(c => c.sec === s && c.n > 0));
-  return { ...d, P, T, cats, catsPorSec, porClave, porGrupo, porTiendaSec, tiposPorSec, eq };
+  // súper con productos hoy (si uno no se pudo descargar, p. ej. DIA desde GitHub, no se ofrece en ningún sitio)
+  const vivas = d.tiendas.map((_, s) => s).filter(s => P.some(p => p.s === s));
+  return { ...d, P, T, cats, catsPorSec, porClave, porGrupo, porTiendaSec, tiposPorSec, eq, vivas };
 }
 
 /* ------------------------------------------------------------------ ajustes de la persona */
@@ -1132,7 +1145,7 @@ function Resultados({ C, r, cantidadDe, poner, abrir }) {
     </div>
     <div class="chips" role="group" aria-label="Filtrar por supermercado">
       <button class="chip" aria-pressed=${tienda < 0} onClick=${() => setTienda(-1)}>Todos</button>
-      ${C.tiendas.map((t, s) => html`<button key=${t} class="chip" aria-pressed=${tienda === s} onClick=${() => setTienda(s)}><${Logo} C=${null} s=${s} t=${20} /><span translate="no">${t}</span></button>`)}
+      ${C.vivas.map(s => [C.tiendas[s], s]).map(([t, s]) => html`<button key=${t} class="chip" aria-pressed=${tienda === s} onClick=${() => setTienda(s)}><${Logo} C=${null} s=${s} t=${20} /><span translate="no">${t}</span></button>`)}
     </div>
     <ul class="rejilla-prod">${lista.slice(0, ver).map(x => html`<${TarjetaProducto} key=${x.p.k} C=${C} p=${x.p} n=${cantidadDe(x.p.k)} poner=${poner} abrir=${abrir} aj=${AJ} />`)}</ul>
     ${ver < lista.length && html`<button class="btn sec ancho" onClick=${() => setVer(v => v + 36)}>Ver ${Math.min(36, lista.length - ver)} más</button>`}
@@ -1418,7 +1431,7 @@ function Escenarios({ C, r, otro, estado, cambiar }) {
 }
 
 function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
-  const activas = useMemo(() => new Set(estado.activas), [estado.activas]);
+  const activas = useMemo(() => new Set(estado.activas.filter(s => C.vivas.includes(s))), [estado.activas, C]);
   const envio = !!estado.envio;
   if (!estado.items.length) return html`<div class="vacio"><span class="icono-grande">${Icono.carro}</span><h2 class="h2">Primero, haz tu lista</h2>
     <p>Añade productos y aquí verás en qué supermercado te sale más barata la compra, junta o repartida.</p>
@@ -1446,13 +1459,14 @@ function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
         <button aria-pressed=${envio} onClick=${() => cambiar(e => ({ ...e, envio: true }))}>Me lo traen a casa</button>
       </div>
       <div class="seg" role="group" aria-label="¿En cuántos supermercados?">
-        ${[[1, "1 súper"], [2, "Hasta 2"], [4, "Los que haga falta"]].map(([n, t]) => html`<button key=${n} aria-pressed=${estado.max === n} onClick=${() => cambiar(e => ({ ...e, max: n }))}>${t}</button>`)}
+        ${[[1, "1 súper"], [2, "Hasta 2"], [4, "Sin límite"]].map(([n, t]) => html`<button key=${n} aria-pressed=${estado.max === n} onClick=${() => cambiar(e => ({ ...e, max: n }))}>${t}</button>`)}
       </div>
       <div class="logos-sel" role="group" aria-label="Supermercados que tienes en cuenta">
-        ${C.tiendas.map((t, s) => {
-          const sinEnvio = envio && !AJ.envios[s].activo;
-          return html`<button key=${t} class="logo-sel" aria-pressed=${activas.has(s) && !sinEnvio} disabled=${sinEnvio} onClick=${() => alternar(s)}>
-            <${Logo} C=${null} s=${s} t=${28} /><span translate="no">${t}</span>${sinEnvio ? html`<span class="peq">· sin envío</span>` : ""}</button>`;
+        ${C.vivas.map(s => {
+          const t = C.tiendas[s], sinEnvio = envio && !AJ.envios[s].activo, si = activas.has(s) && !sinEnvio;
+          return html`<button key=${t} class="logo-sel" aria-pressed=${si} disabled=${sinEnvio} onClick=${() => alternar(s)}>
+            <${Logo} C=${null} s=${s} t=${28} /><span translate="no">${t}</span>${sinEnvio ? html`<span class="peq">· sin envío</span>` : ""}
+            ${si && html`<span class="marca-sel" aria-hidden="true">${Icono.ok}</span>`}</button>`;
         })}
       </div>
       ${envio && html`<p class="peq">Se suman los gastos de envío de cada súper y se respeta su pedido mínimo. Ajusta las tarifas de tu zona en <button class="enlace-btn" onClick=${() => ir("ajustes")}>Ajustes</button>.</p>`}
@@ -1476,7 +1490,7 @@ function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
       <p class="peq">«Llenar carrito» usa tu marcador del navegador en la web de cada súper: así entra con tu sesión y añade toda la cesta de golpe. LIDL no vende alimentación online: llévate su lista a la tienda.</p>
     </section>`}
     ${r && html`<section class="seccion" aria-labelledby="rk-tit"><h2 class="h2" id="rk-tit">Todo en un solo súper</h2>
-      <ol class="ranking tarjeta">${[...r.unaTienda].sort((a, b) => a.sinEnvio - b.sinEnvio || a.faltan.length - b.faltan.length || a.total - b.total).map(x => html`<li key=${x.conj[0]} class=${r.mejorUna && x.conj[0] === r.mejorUna.conj[0] ? "mejor" : ""}>
+      <ol class="ranking tarjeta">${r.unaTienda.filter(x => C.vivas.includes(x.conj[0])).sort((a, b) => a.sinEnvio - b.sinEnvio || a.faltan.length - b.faltan.length || a.total - b.total).map(x => html`<li key=${x.conj[0]} class=${r.mejorUna && x.conj[0] === r.mejorUna.conj[0] ? "mejor" : ""}>
         <${Logo} C=${C} s=${x.conj[0]} t=${36} />
         <div style=${{ minWidth: 0 }}><b translate="no">${C.tiendas[x.conj[0]]}</b>
           <div class="peq">${x.sinEnvio ? "No lleva la compra a casa" : x.faltan.length ? `Faltan ${x.faltan.length}: ${x.faltan.map(o => o.it.n).join(", ")}` : "Tiene toda tu lista"}</div>
@@ -1487,6 +1501,8 @@ function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
 }
 
 /* ------------------------------------------------------------------ ajustes */
+// «Mercadona, Consum y LIDL»
+const lista = xs => xs.length > 1 ? xs.slice(0, -1).join(", ") + " y " + xs[xs.length - 1] : xs.join("");
 function Ajustes({ C, estado, cambiar }) {
   const aj = mezclarAjustes(estado.ajustes);
   const fijar = cambio => cambiar(e => ({ ...e, ajustes: { ...mezclarAjustes(e.ajustes), ...cambio } }));
@@ -1515,7 +1531,7 @@ function Ajustes({ C, estado, cambiar }) {
     </section>
     <section class="seccion" aria-labelledby="env-tit"><h2 class="h2" id="env-tit">Envío a domicilio</h2>
       <p class="peq">Tarifas publicadas por cada cadena. Cambian según el código postal: corrígelas si en tu zona son otras.</p>
-      <div class="tarjeta grupo-ios">${C.tiendas.map((t, s) => {
+      <div class="tarjeta grupo-ios">${C.vivas.map(s => [C.tiendas[s], s]).map(([t, s]) => {
         const e = aj.envios[s];
         return html`<div key=${t}>
           <${Interruptor} id=${`env-${s}`} activo=${e.activo} cambiar=${v => fijarEnvio(s, "activo", v)} titulo=${html`<${Logo} C=${null} s=${s} t=${26} /><span translate="no">${t}</span>`}
@@ -1532,8 +1548,8 @@ function Ajustes({ C, estado, cambiar }) {
     </section>
     <section class="seccion" aria-labelledby="dat-tit"><h2 class="h2" id="dat-tit">Sobre los datos</h2>
       <div class="tarjeta" style=${{ padding: 16, display: "grid", gap: 10 }}>
-        <div class="super-fila">${C.tiendas.map((t, s) => html`<${Logo} key=${t} C=${C} s=${s} t=${36} />`)}</div>
-        <p class="peq">Precios de las webs de Mercadona, Consum, DIA y LIDL, actualizados cada mañana. Los de Mercadona son los de su almacén de Valencia; los de las demás cadenas, los que muestra su web por defecto. LIDL solo publica online una parte de su surtido.</p>
+        <div class="super-fila">${C.vivas.map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${36} />`)}</div>
+        <p class="peq">Precios de las webs de ${lista(C.vivas.map(s => C.tiendas[s]))}, actualizados cada mañana.${C.vivas.length < C.tiendas.length ? ` Hoy no hay precios de ${lista(C.tiendas.filter((_, s) => !C.vivas.includes(s)))}: su web no ha respondido.` : ""} Los de Mercadona son los de su almacén de Valencia; los de las demás cadenas, los que muestra su web por defecto. LIDL solo publica online una parte de su surtido.</p>
       </div>
     </section>
   </div>`;
@@ -1581,7 +1597,7 @@ function Naturalidad({ C, p }) {
   const [abierto, setAbierto] = useState(false);
   const nv = nivelDe(p);
   const titulo = sinDatos(p) ? "Sin datos de ingredientes" : NIVELES[nv];
-  return html`<section class="tarjeta natural" aria-labelledby="nat-tit">
+  return html`<section class=${"tarjeta natural" + (sinDatos(p) ? "" : " nivel-" + nv)} aria-labelledby="nat-tit">
     <div class="cab-nat"><h3 class="h3" id="nat-tit">${titulo}</h3>${!sinDatos(p) && html`<${Nivel} p=${p} />`}</div>
     <p class="peq">${sinDatos(p) ? (p.s === 3 ? "LIDL no publica sus ingredientes y este producto no está en Open Food Facts." : "Ni la tienda ni Open Food Facts publican sus ingredientes, y no se han podido leer en las fotos del envase.") + " En el modo saludable va por detrás de lo que se sabe que es natural o poco procesado." : p.mo}</p>
     ${d && d[0] && html`<p class="ingr"><b>Ingredientes${d[5] === "ocr" ? " (leídos de la foto del envase)" : d[5] === "off" ? " (de Open Food Facts)" : ""}: </b><${Resaltado} texto=${d[0]} /></p>`}
@@ -1728,7 +1744,7 @@ function App() {
   }, [cambiar, avisar, cantidades]);
   useEffect(() => { if (!aviso) return; const t = setTimeout(() => setAviso(null), aviso.deshacer ? 4500 : 2200); return () => clearTimeout(t); }, [aviso]);
 
-  const activas = useMemo(() => new Set(estado.activas), [estado.activas]);
+  const activas = useMemo(() => new Set(estado.activas.filter(s => !C || C.vivas.includes(s))), [estado.activas, C]);
   const plan = useMemo(() => C ? planificar(C, estado.items, activas, estado.max, !!estado.envio) : null, [C, estado.items, activas, estado.max, estado.envio, aj]);
   const otro = useMemo(() => C && vista === "comprar" ? planificar(C, estado.items, activas, 4, !estado.envio) : null, [C, estado.items, activas, estado.envio, aj, vista]);
 
@@ -1744,7 +1760,7 @@ function App() {
         <div class="marca-lat"><span class="marca-icono">${Icono.etiqueta}</span><b>Comparador de supermercados</b></div>
         ${NAV.map(([v, t, ic]) => navBoton(v, t, ic, "nav-lat"))}
         <div class="pie">
-          <div class="super-fila">${[0, 1, 2, 3].map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${30} />`)}</div>
+          <div class="super-fila">${(C ? C.vivas : [0, 1, 2, 3]).map(s => html`<${Logo} key=${s} C=${C} s=${s} t=${30} />`)}</div>
           <p class="peq">${C ? `Precios del ${fecha}` : "Cargando precios…"}</p>
           <p class="peq">${sync === "nube" ? "Tu lista se guarda en tu cuenta" : "Tu lista se guarda en este dispositivo"}</p>
         </div>

@@ -115,7 +115,7 @@ function Escenarios({ C, r, otro, estado, cambiar }) {
 }
 
 function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
-  const activas = useMemo(() => new Set(estado.activas), [estado.activas]);
+  const activas = useMemo(() => new Set(estado.activas.filter(s => C.vivas.includes(s))), [estado.activas, C]);
   const envio = !!estado.envio;
   if (!estado.items.length) return html`<div class="vacio"><span class="icono-grande">${Icono.carro}</span><h2 class="h2">Primero, haz tu lista</h2>
     <p>Añade productos y aquí verás en qué supermercado te sale más barata la compra, junta o repartida.</p>
@@ -143,13 +143,14 @@ function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
         <button aria-pressed=${envio} onClick=${() => cambiar(e => ({ ...e, envio: true }))}>Me lo traen a casa</button>
       </div>
       <div class="seg" role="group" aria-label="¿En cuántos supermercados?">
-        ${[[1, "1 súper"], [2, "Hasta 2"], [4, "Los que haga falta"]].map(([n, t]) => html`<button key=${n} aria-pressed=${estado.max === n} onClick=${() => cambiar(e => ({ ...e, max: n }))}>${t}</button>`)}
+        ${[[1, "1 súper"], [2, "Hasta 2"], [4, "Sin límite"]].map(([n, t]) => html`<button key=${n} aria-pressed=${estado.max === n} onClick=${() => cambiar(e => ({ ...e, max: n }))}>${t}</button>`)}
       </div>
       <div class="logos-sel" role="group" aria-label="Supermercados que tienes en cuenta">
-        ${C.tiendas.map((t, s) => {
-          const sinEnvio = envio && !AJ.envios[s].activo;
-          return html`<button key=${t} class="logo-sel" aria-pressed=${activas.has(s) && !sinEnvio} disabled=${sinEnvio} onClick=${() => alternar(s)}>
-            <${Logo} C=${null} s=${s} t=${28} /><span translate="no">${t}</span>${sinEnvio ? html`<span class="peq">· sin envío</span>` : ""}</button>`;
+        ${C.vivas.map(s => {
+          const t = C.tiendas[s], sinEnvio = envio && !AJ.envios[s].activo, si = activas.has(s) && !sinEnvio;
+          return html`<button key=${t} class="logo-sel" aria-pressed=${si} disabled=${sinEnvio} onClick=${() => alternar(s)}>
+            <${Logo} C=${null} s=${s} t=${28} /><span translate="no">${t}</span>${sinEnvio ? html`<span class="peq">· sin envío</span>` : ""}
+            ${si && html`<span class="marca-sel" aria-hidden="true">${Icono.ok}</span>`}</button>`;
         })}
       </div>
       ${envio && html`<p class="peq">Se suman los gastos de envío de cada súper y se respeta su pedido mínimo. Ajusta las tarifas de tu zona en <button class="enlace-btn" onClick=${() => ir("ajustes")}>Ajustes</button>.</p>`}
@@ -173,7 +174,7 @@ function Comprar({ C, estado, cambiar, abrir, ir, avisar, r, otro }) {
       <p class="peq">«Llenar carrito» usa tu marcador del navegador en la web de cada súper: así entra con tu sesión y añade toda la cesta de golpe. LIDL no vende alimentación online: llévate su lista a la tienda.</p>
     </section>`}
     ${r && html`<section class="seccion" aria-labelledby="rk-tit"><h2 class="h2" id="rk-tit">Todo en un solo súper</h2>
-      <ol class="ranking tarjeta">${[...r.unaTienda].sort((a, b) => a.sinEnvio - b.sinEnvio || a.faltan.length - b.faltan.length || a.total - b.total).map(x => html`<li key=${x.conj[0]} class=${r.mejorUna && x.conj[0] === r.mejorUna.conj[0] ? "mejor" : ""}>
+      <ol class="ranking tarjeta">${r.unaTienda.filter(x => C.vivas.includes(x.conj[0])).sort((a, b) => a.sinEnvio - b.sinEnvio || a.faltan.length - b.faltan.length || a.total - b.total).map(x => html`<li key=${x.conj[0]} class=${r.mejorUna && x.conj[0] === r.mejorUna.conj[0] ? "mejor" : ""}>
         <${Logo} C=${C} s=${x.conj[0]} t=${36} />
         <div style=${{ minWidth: 0 }}><b translate="no">${C.tiendas[x.conj[0]]}</b>
           <div class="peq">${x.sinEnvio ? "No lleva la compra a casa" : x.faltan.length ? `Faltan ${x.faltan.length}: ${x.faltan.map(o => o.it.n).join(", ")}` : "Tiene toda tu lista"}</div>

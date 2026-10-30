@@ -76,7 +76,7 @@ function Resultados({ C, r, cantidadDe, poner, abrir }) {
     </div>
     <div class="chips" role="group" aria-label="Filtrar por supermercado">
       <button class="chip" aria-pressed=${tienda < 0} onClick=${() => setTienda(-1)}>Todos</button>
-      ${C.tiendas.map((t, s) => html`<button key=${t} class="chip" aria-pressed=${tienda === s} onClick=${() => setTienda(s)}><${Logo} C=${null} s=${s} t=${20} /><span translate="no">${t}</span></button>`)}
+      ${C.vivas.map(s => [C.tiendas[s], s]).map(([t, s]) => html`<button key=${t} class="chip" aria-pressed=${tienda === s} onClick=${() => setTienda(s)}><${Logo} C=${null} s=${s} t=${20} /><span translate="no">${t}</span></button>`)}
     </div>
     <ul class="rejilla-prod">${lista.slice(0, ver).map(x => html`<${TarjetaProducto} key=${x.p.k} C=${C} p=${x.p} n=${cantidadDe(x.p.k)} poner=${poner} abrir=${abrir} aj=${AJ} />`)}</ul>
     ${ver < lista.length && html`<button class="btn sec ancho" onClick=${() => setVer(v => v + 36)}>Ver ${Math.min(36, lista.length - ver)} más</button>`}

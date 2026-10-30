@@ -36,6 +36,8 @@ function preparar(d) {
   tiposPorSec.forEach(l => l.sort(orden));
   cats.forEach(c => c.tipos.sort(orden));
   const catsPorSec = d.secciones.map((_, s) => cats.filter(c => c.sec === s && c.n > 0));
-  return { ...d, P, T, cats, catsPorSec, porClave, porGrupo, porTiendaSec, tiposPorSec, eq };
+  // súper con productos hoy (si uno no se pudo descargar, p. ej. DIA desde GitHub, no se ofrece en ningún sitio)
+  const vivas = d.tiendas.map((_, s) => s).filter(s => P.some(p => p.s === s));
+  return { ...d, P, T, cats, catsPorSec, porClave, porGrupo, porTiendaSec, tiposPorSec, eq, vivas };
 }
 
