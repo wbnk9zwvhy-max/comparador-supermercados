@@ -7,7 +7,11 @@ function PanelCompra({ C, estado, r, poner, abrir, ir }) {
   const items = estado.items;
   return html`<aside class="panel" aria-labelledby="panel-tit"><div class="panel-in">
     <div class="seccion-cab"><h2 class="h3" id="panel-tit">Tu compra</h2><span class="peq">${items.length} ${items.length === 1 ? "producto" : "productos"}</span></div>
-    ${!items.length ? html`<p class="peq">Pulsa + en cualquier producto y aquí verás tu lista y dónde te sale más barata.</p>` : html`
+    ${!items.length ? html`<ol class="pasos">
+        <li><b>Busca</b> lo que sueles comprar: «leche», «pavo», «detergente»…</li>
+        <li><b>Pulsa +</b> en cada producto para apuntarlo en tu lista.</li>
+        <li><b>Mira dónde comprar:</b> en un súper, repartiendo o con envío a casa.</li>
+      </ol>` : html`
       <${ResumenPlan} C=${C} r=${r} ir=${ir} compacto=${true} />
       <ul class="filas">${items.slice(0, 30).map(it => {
         const p = C.porClave.get(it.k);

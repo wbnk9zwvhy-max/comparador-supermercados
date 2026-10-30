@@ -199,7 +199,10 @@ p { margin: 0; text-wrap: pretty; }
 .ganador .foto { width: 76px; height: 76px; }
 .ganador .precio { font: 800 28px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .ganador .pu-gan { font: 600 14px/1 var(--texto); letter-spacing: 0; opacity: .8; margin-left: 4px; }
-.rival .dif { color: var(--oferta); font-weight: 600; }
+.rival .dif { color: var(--oferta); font-weight: 600; white-space: nowrap; }
+/* panel vacío: los tres pasos para usar la app */
+.pasos { margin: 0; padding-left: 20px; display: grid; gap: 10px; font-size: 14px; color: var(--tinta-2); }
+.pasos b { color: var(--tinta); font-weight: 600; }
 .ganador .n { font-size: 14px; opacity: .85; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ganador .sello { position: absolute; top: 10px; right: 12px; font-size: 11px; font-weight: 700; letter-spacing: .02em; background: var(--etiqueta-tinta); color: var(--etiqueta);
   padding: 3px 8px; border-radius: 999px; }
@@ -227,7 +230,13 @@ p { margin: 0; text-wrap: pretty; }
 .pcard .imagen .logo { position: absolute; top: 6px; left: 6px; }
 .pcard .precio { font: 800 19px/1 var(--display); font-variant-numeric: tabular-nums; letter-spacing: -.01em; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
 .pcard .precio s { font: 500 13px var(--texto); color: var(--tinta-3); }
-.pcard .pu { font-size: 12.5px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+/* el precio por kg o L como en la etiqueta del lineal: en su cajita; el más barato, en amarillo */
+.pcard .pu-fila { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-height: 22px; }
+.pcard .pu { font-size: 12px; font-weight: 600; color: var(--tinta-2); font-variant-numeric: tabular-nums; padding: 2px 6px; border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--linea); background: var(--fondo); }
+.pcard .etq-mejor { position: absolute; top: 8px; right: 8px; font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 7px; background: var(--etiqueta); color: var(--etiqueta-tinta); }
+.pcard.mejor-pu .pu { background: var(--etiqueta); color: var(--etiqueta-tinta); box-shadow: none; }
+.pcard.mejor-pu { box-shadow: var(--sombra-1), inset 0 0 0 2px var(--etiqueta); }
 .pcard .n { font-size: 14px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; min-height: 2.6em; }
 .pcard { container-type: inline-size; }
 .pcard .accion { position: absolute; right: 16px; top: calc(100cqw - 56px); z-index: 1; }

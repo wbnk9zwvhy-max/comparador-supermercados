@@ -39,7 +39,7 @@ function Comparativa({ C, comp, cantidadDe, poner, abrir, refinar, q, cat, grand
       return html`<li key=${f.s}><button class="rival" onClick=${() => abrir(f.p)} aria-label=${`${C.tiendas[f.s]}: ${f.p.n}, ${fmtU(upEf(f.p), f.p.u)}`}>
         <${Logo} C=${C} s=${f.s} t=${36} />
         <span style=${{ minWidth: 0 }}><span class="n" style=${{ display: "block" }}>${f.p.n}${f.aprox ? " (similar)" : ""}</span>
-          <span class="peq">${fmtU(upEf(f.p), f.p.u)}${d >= 0.005 && !AJ.saludable ? html` · <span class="dif">+${fmt(d)}/${UNID[f.p.u]}</span>` : d <= -0.005 ? ` · ${fmt(d)}/${UNID[f.p.u]}` : " · mismo precio por " + UNID[f.p.u]}${AJ.saludable && f.p.sa > 0 ? ` · ${f.p.mo}` : ""}</span></span>
+          <span class="peq">${fmtU(upEf(f.p), f.p.u)}${d >= 0.005 && !AJ.saludable ? html` · <span class="dif">+${fmt(d)}/${UNID[f.p.u]} (+${Math.round(100 * d / upEf(mejor.p))} %)</span>` : d <= -0.005 ? ` · ${fmt(d)}/${UNID[f.p.u]}` : " · mismo precio por " + UNID[f.p.u]}${AJ.saludable && f.p.sa > 0 ? ` · ${f.p.mo}` : ""}</span></span>
         <span class="pu">${fmt(precioEf(f.p))}</span>
       </button></li>`;
     })}</ul>`}
@@ -65,6 +65,15 @@ function Resultados({ C, r, cantidadDe, poner, abrir }) {
     else l = [...l].sort((a, b) => precioEf(a.p) - precioEf(b.p));
     return l;
   }, [r, orden, tienda, AJ]);
+  // la etiqueta amarilla del lineal: el más barato por kg, L o unidad entre lo que se ve (en la unidad más común)
+  const mejorPu = useMemo(() => {
+    const veces = new Map();
+    for (const x of lista) if (x.p.up != null && !x.p.gr) veces.set(x.p.u, (veces.get(x.p.u) || 0) + 1);
+    const [u, n] = [...veces.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+    if (!n || n < 3) return null;
+    const cand = lista.filter(x => x.p.u === u && x.p.up != null && !x.p.gr), min = Math.min(...cand.map(x => upEf(x.p)));
+    return new Set(cand.filter(x => upEf(x.p) <= min + 0.005).map(x => x.p.k));  // si empatan, todos
+  }, [lista, AJ]);
   return html`<section class="seccion" aria-labelledby="res-tit">
     <div class="barra-res">
       <h2 class="h2" id="res-tit">${lista.length.toLocaleString("es-ES")} ${lista.length === 1 ? "producto" : "productos"}</h2>
@@ -78,7 +87,7 @@ function Resultados({ C, r, cantidadDe, poner, abrir }) {
       <button class="chip" aria-pressed=${tienda < 0} onClick=${() => setTienda(-1)}>Todos</button>
       ${C.vivas.map(s => [C.tiendas[s], s]).map(([t, s]) => html`<button key=${t} class="chip" aria-pressed=${tienda === s} onClick=${() => setTienda(s)}><${Logo} C=${null} s=${s} t=${20} /><span translate="no">${t}</span></button>`)}
     </div>
-    <ul class="rejilla-prod">${lista.slice(0, ver).map(x => html`<${TarjetaProducto} key=${x.p.k} C=${C} p=${x.p} n=${cantidadDe(x.p.k)} poner=${poner} abrir=${abrir} aj=${AJ} />`)}</ul>
+    <ul class="rejilla-prod">${lista.slice(0, ver).map(x => html`<${TarjetaProducto} key=${x.p.k} C=${C} p=${x.p} n=${cantidadDe(x.p.k)} poner=${poner} abrir=${abrir} aj=${AJ} mejor=${!!mejorPu && mejorPu.has(x.p.k)} />`)}</ul>
     ${ver < lista.length && html`<button class="btn sec ancho" onClick=${() => setVer(v => v + 36)}>Ver ${Math.min(36, lista.length - ver)} más</button>`}
   </section>`;
 }

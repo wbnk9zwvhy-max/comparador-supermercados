@@ -34,14 +34,14 @@ function Cantidad({ n, mas, menos, nombre }) {
     <button onClick=${mas} aria-label=${`Añadir una unidad de ${nombre}`}>${Icono.mas}</button></span>`;
 }
 
-const TarjetaProducto = memo(function TarjetaProducto({ C, p, n, poner, abrir }) {
+const TarjetaProducto = memo(function TarjetaProducto({ C, p, n, poner, abrir, mejor }) {
   const pu = upEf(p);
-  return html`<li class="pcard">
+  return html`<li class=${"pcard" + (mejor ? " mejor-pu" : "")}>
     <button class="abrir" onClick=${() => abrir(p)} aria-label=${`${p.n}, ${C.tiendas[p.s]}, ${fmt(precioEf(p))}`}>
-      <div class="imagen"><${Foto} C=${C} p=${p} t=${112} /><${Logo} C=${C} s=${p.s} t=${26} /></div>
+      <div class="imagen"><${Foto} C=${C} p=${p} t=${112} /><${Logo} C=${C} s=${p.s} t=${26} />${mejor && html`<span class="etq-mejor">Mejor €/${UNID[p.u]}</span>`}</div>
       <div style=${{ display: "grid", gap: 4, minWidth: 0 }}>
         <span class="precio">${fmt(precioEf(p))}${p.a ? html`<s>${fmt(p.a)}</s>` : ""}</span>
-        <span class="pu">${pu != null ? fmtU(pu, p.u) : " "}</span>
+        <span class="pu-fila">${pu != null ? html`<span class="pu">${fmtU(pu, p.u)}</span>` : ""}</span>
         <span class="n">${p.n}</span>
         <${Etiquetas} p=${p} todas=${false} />
       </div>
