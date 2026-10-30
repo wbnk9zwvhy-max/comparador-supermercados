@@ -35,6 +35,17 @@ app() {
   "$PY" -W ignore construir_app.py ../fotos ../app && cd .. && node build.js
 }
 
+traer_web() {
+  # los datos que ya publica la web (para publicar solo un cambio de diseño, sin raspar los súper)
+  local base="${WEB:-https://wbnk9zwvhy-max.github.io/comparador-supermercados}"
+  mkdir -p app/miniaturas app/ingredientes
+  curl -sfS "$base/catalogo.json" -o app/catalogo.json || return 1
+  read -r hojas trozos < <(node -e 'const d=require("./app/catalogo.json");console.log(d.hojas, d.trozos_ingredientes)')
+  for ((i = 0; i < hojas; i++)); do printf -v f "m%03d.webp" "$i"; curl -sfS "$base/miniaturas/$f" -o "app/miniaturas/$f" || return 1; done
+  for ((i = 0; i < trozos; i++)); do printf -v f "i%02d.json" "$i"; curl -sfS "$base/ingredientes/$f" -o "app/ingredientes/$f" || return 1; done
+  echo "- datos de la web: $hojas hojas de miniaturas, $trozos trozos de ingredientes" >> "$RESUMEN"
+}
+
 web() {
   rm -rf web && mkdir -p web
   cp -R app/index.html app/catalogo.json app/miniaturas app/ingredientes app/logos web/

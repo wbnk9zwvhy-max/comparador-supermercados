@@ -1,0 +1,49 @@
+# Publica solo el diseño de la app (index.html) con los datos que ya están en la web: sin raspar los súper.
+# Para cambios de interfaz que se quieren ver ya, sin esperar a la actualización diaria.
+name: Publicar solo la app
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: actualizar        # la misma cola que la actualización diaria: nunca publican a la vez
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Dependencias
+        run: npm ci && npx playwright install --with-deps chromium
+      - name: Datos de la web publicada
+        run: ci/actualizar.sh traer_web
+      - name: Construir la app
+        run: node build.js
+      - name: Pruebas (datos fijos y los de la web)
+        run: node --test "tests/*.test.js" && npm run test:hoy
+      - name: Preparar web
+        run: ci/actualizar.sh web
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
